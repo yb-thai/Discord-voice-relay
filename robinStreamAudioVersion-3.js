@@ -7,6 +7,7 @@ const {
   createAudioResource,
   AudioPlayerStatus,
   StreamType,
+  getVoiceConnection,
 } = require("@discordjs/voice");
 const ffmpeg = require("ffmpeg-static");
 const { spawn } = require("child_process");
@@ -47,13 +48,14 @@ let lastPushed = Date.now();
 console.log("[Bot B] Connected to audio relay server");
 
 client.once("ready", () => {
-    console.log("🔊 Audio stream bot ready. Use /outsideman to play audio.");
+    console.log("🔊 Audio stream bot ready. Use /robin-3 to play audio.");
   });
   
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
+    
   
-    if (interaction.commandName === "outsideman") {
+    if (interaction.commandName === "robin-3") {
       const voiceChannel = interaction.member.voice.channel;
   
       if (!voiceChannel) {
@@ -68,7 +70,7 @@ client.once("ready", () => {
         selfDeaf: false,
       });
   
-      await interaction.reply(`🔊 Joined ${voiceChannel.name} — playing audio.`);
+      await interaction.reply(`🔊 Joined ${voiceChannel.name} — start playing audio.`);
 
   const player = createAudioPlayer();
 
@@ -108,7 +110,7 @@ client.once("ready", () => {
   setInterval(() => {
     const now = Date.now();
     if (now - lastPushed > 30) {
-      console.log(`[Bot B] Pushing silence frame to avoid idle.`);
+    // console.log(`[Bot B] Pushing silence frame to avoid idle.`);
       incomingAudio.push(SILENCE_FRAME);
       lastPushed = now;
     }
@@ -116,6 +118,16 @@ client.once("ready", () => {
     
   player.play(resource); // start playback
     } //sus
+
+    if (interaction.commandName === "stoprobin3") {
+      const connection = getVoiceConnection(interaction.guild.id);
+      if (connection) {
+        connection.destroy();
+        await interaction.reply("🛑 Bot has left the voice channel.");
+      } else {
+        await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+      }
+    }
 });
 
 client.login(TOKEN);

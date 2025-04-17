@@ -1,27 +1,33 @@
+require("dotenv").config();
 const WebSocket = require("ws");
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 const {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
   AudioPlayerStatus,
   StreamType,
-  NoSubscriberBehavior,
+  getVoiceConnection,
 } = require("@discordjs/voice");
 const ffmpeg = require("ffmpeg-static");
 const { spawn } = require("child_process");
 const { Readable } = require("stream");
 const fs = require("fs");
 
-const TOKEN = "TOKEN";
-const GUILD_ID = "SERVER";
-const CHANNEL_B_ID = "REPLAY_CHANNEL";
+const TOKEN = (process.env.ROBIN_2_TOKEN);
+
 
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
 const chunkQueue = [];
+
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-});
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildVoiceStates,
+      GatewayIntentBits.MessageContent,
+    ],
+  });
 
 const SILENCE_FRAME = Buffer.alloc(1920); // 20ms @ 48kHz stereo s16le
 
@@ -41,19 +47,30 @@ let lastPushed = Date.now();
 
 console.log("[Bot B] Connected to audio relay server");
 
-client.once("ready", async () => {
-  console.log(`Bot B is ready`);
-
-  const guild = await client.guilds.fetch(GUILD_ID);
-  const channel = await guild.channels.fetch(CHANNEL_B_ID);
-
-  const connection = joinVoiceChannel({
-    channelId: CHANNEL_B_ID,
-    guildId: GUILD_ID,
-    adapterCreator: guild.voiceAdapterCreator,
-    selfDeaf: false,
-    selfMute: false,
+client.once("ready", () => {
+    console.log("🔊 Audio stream bot ready. Use /robin-2 to play audio.");
   });
+  
+  client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    
+  
+    if (interaction.commandName === "robin-2") {
+      const voiceChannel = interaction.member.voice.channel;
+  
+      if (!voiceChannel) {
+        await interaction.reply("❌ You must be in a voice channel to use this command.");
+        return;
+      }
+  
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: voiceChannel.guild.id,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+        selfDeaf: false,
+      });
+  
+      await interaction.reply(`🔊 Joined ${voiceChannel.name} — start playing audio.`);
 
   const player = createAudioPlayer();
 
@@ -93,13 +110,24 @@ client.once("ready", async () => {
   setInterval(() => {
     const now = Date.now();
     if (now - lastPushed > 30) {
-      console.log(`[Bot B] Pushing silence frame to avoid idle.`);
+    // console.log(`[Bot B] Pushing silence frame to avoid idle.`);
       incomingAudio.push(SILENCE_FRAME);
       lastPushed = now;
     }
   }, 10);
-
+    
   player.play(resource); // start playback
+    } //sus
+
+    if (interaction.commandName === "stop") {
+      const connection = getVoiceConnection(interaction.guild.id);
+      if (connection) {
+        connection.destroy();
+        await interaction.reply("🛑 Bot has left the voice channel.");
+      } else {
+        await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+      }
+    }
 });
 
 client.login(TOKEN);

@@ -1,33 +1,50 @@
+require("dotenv").config();
 const WebSocket = require("ws");
-const { Client, GatewayIntentBits } = require("discord.js");
-const { joinVoiceChannel, EndBehaviorType } = require("@discordjs/voice");
+const { Client, GatewayIntentBits, Events} = require("discord.js");
+const { joinVoiceChannel, EndBehaviorType, getVoiceConnection } = require("@discordjs/voice");
 const prism = require("prism-media");
 
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
 
-const TOKEN = "TOKEN";
-const GUILD_ID = "SERVER";
-const CHANNEL_A_ID = "LISTENING_CHANNEL";
+const TOKEN = (process.env.BATMAN_TOKEN);
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-});
-
-client.once("ready", async () => {
-  console.log(`Bot A is ready`);
-
-  const guild = await client.guilds.fetch(GUILD_ID);
-  const channel = await guild.channels.fetch(CHANNEL_A_ID);
-
-  const connection = joinVoiceChannel({
-    channelId: CHANNEL_A_ID,
-    guildId: GUILD_ID,
-    adapterCreator: guild.voiceAdapterCreator,
-    selfDeaf: false,
-    selfMute: true,
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildVoiceStates,
+      GatewayIntentBits.MessageContent,
+    ],
   });
 
-  connection.receiver.speaking.on("start", (userId) => {
+client.once("ready", () => {
+    console.log("🎙️ Recorder bot ready. Use /batman to start.");
+  });
+  
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName === "batman") {
+      const voiceChannel = interaction.member.voice.channel;
+  
+      if (!voiceChannel) {
+        await interaction.reply("❌ You must be in a voice channel to use this command.");
+        return;
+      };
+
+     const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: voiceChannel.guild.id,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+        selfDeaf: false,
+        selfMute: true,
+      });
+  
+      await interaction.reply(`🛰️ Joined ${voiceChannel.name} — start capturing audio.`);
+   
+  
+
+connection.receiver.speaking.on("start", (userId) => {
     console.log(`User ${userId} started speaking`);
 
     const opusStream = connection.receiver.subscribe(userId, {
@@ -96,6 +113,16 @@ client.once("ready", async () => {
   ws.on("error", (err) => {
     console.error("[Bot A] WebSocket error:", err);
   });
+} // sus
+if (interaction.commandName === "stopbatman") {
+  const connection = getVoiceConnection(interaction.guild.id);
+  if (connection) {
+    connection.destroy();
+    await interaction.reply("🛑 Bot has left the voice channel.");
+  } else {
+    await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+  }
+}
 });
 
 client.login(TOKEN);
