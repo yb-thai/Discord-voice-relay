@@ -38,14 +38,14 @@ const incomingAudio = new Readable({
 
 ws.on("message", (data) => {
   // Push received raw PCM data into the stream
-  console.log(`[Bot B] Received data: ${data.length} bytes`);
+  console.log(`[Robin-4] Received data: ${data.length} bytes`);
   incomingAudio.push(data);
   lastPushed = Date.now();
 });
 
 let lastPushed = Date.now();
 
-console.log("[Bot B] Connected to audio relay server");
+console.log("[Robin-4] Connected to audio relay server");
 
 client.once("ready", () => {
   console.log("🔊 Audio stream bot ready. Use /alfred to play audio.");
@@ -76,16 +76,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     player.on("stateChange", (oldState, newState) => {
       console.log(
-        `[Bot B] AudioPlayer transitioned from ${oldState.status} to ${newState.status}`
+        `[Robin-4] AudioPlayer transitioned from ${oldState.status} to ${newState.status}`
       );
     });
 
     player.on("error", (error) => {
-      console.error(`[Bot B] AudioPlayer error:`, error.message);
+      console.error(`[Robin-4] AudioPlayer error:`, error.message);
     });
 
     player.on("stateChange", (old, newS) => {
-      console.log(`[Bot B] Player state: ${old.status} ➝ ${newS.status}`);
+      console.log(`[Robin-4] Player state: ${old.status} ➝ ${newS.status}`);
     });
 
     // Create a Discord audio resource from ffmpeg stdout
@@ -94,15 +94,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
 
     player.on(AudioPlayerStatus.Playing, () => {
-      console.log("[Bot B] 🔊 Now playing audio");
+      console.log("[Robin-4] 🔊 Now playing audio");
     });
 
     player.on(AudioPlayerStatus.Idle, () => {
-      console.log("[Bot B] ⚠️ Player is idle");
+      console.log("[Robin-4] ⚠️ Player is idle");
     });
 
     player.on("error", (err) => {
-      console.error("[Bot B] Player error:", err);
+      console.error("[Robin-4] Player error:", err);
     });
 
     connection.subscribe(player);
@@ -110,7 +110,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     setInterval(() => {
       const now = Date.now();
       if (now - lastPushed > 30) {
-        // console.log(`[Bot B] Pushing silence frame to avoid idle.`);
+        // console.log(`[Robin-4] Pushing silence frame to avoid idle.`);
         incomingAudio.push(SILENCE_FRAME);
         lastPushed = now;
       }
@@ -123,9 +123,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
       connection.destroy();
-      await interaction.reply("🛑 Bot has left the voice channel.");
+      await interaction.reply("🛑 Robin-4 has left the voice channel.");
     } else {
-      await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+      await interaction.reply("⚠️ Robin-4 is not currently in a voice channel.");
     }
   }
 });

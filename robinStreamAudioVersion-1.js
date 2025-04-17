@@ -7,7 +7,7 @@ const {
   createAudioResource,
   AudioPlayerStatus,
   StreamType,
-  getVoiceConnection,
+  getVoicerobinConnection,
 } = require("@discordjs/voice");
 const ffmpeg = require("ffmpeg-static");
 const { spawn } = require("child_process");
@@ -18,6 +18,14 @@ const TOKEN = (process.env.ROBIN_1_TOKEN);
 
 
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
+ws.on("message", (data) => {
+  console.log(`[Robin] Received ${data.length} bytes`);
+  incomingAudio.write(data);
+});
+ws.on("open", () => { console.log("[Robin] WebSocket connected"); });
+ws.on("close", () => { console.log("[Robin] WebSocket closed"); });
+ws.on("error", (err) => { console.error("[Robin] WebSocket error:", err); });
+
 const chunkQueue = [];
 
 const client = new Client({
@@ -38,14 +46,16 @@ const incomingAudio = new Readable({
 
 ws.on("message", (data) => {
   // Push received raw PCM data into the stream
-  console.log(`[Bot B] Received data: ${data.length} bytes`);
+  console.log(`[Robin-1] Received data: ${data.length} bytes`);
   incomingAudio.push(data);
   lastPushed = Date.now();
 });
 
 let lastPushed = Date.now();
+// Global variable for Robin's voice robinConnection
+let robinConnection = null;
 
-console.log("[Bot B] Connected to audio relay server");
+console.log("[Robin-1] Connected to audio relay server");
 
 client.once("ready", () => {
   console.log("🔊 Audio stream bot ready. Use /robin-1 to play audio.");
@@ -63,7 +73,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
-    const connection = joinVoiceChannel({
+ 
+
+    robinConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
@@ -76,16 +88,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     player.on("stateChange", (oldState, newState) => {
       console.log(
-        `[Bot B] AudioPlayer transitioned from ${oldState.status} to ${newState.status}`
+        `[Robin-1] AudioPlayer transitioned from ${oldState.status} to ${newState.status}`
       );
     });
 
     player.on("error", (error) => {
-      console.error(`[Bot B] AudioPlayer error:`, error.message);
+      console.error(`[Robin-1] AudioPlayer error:`, error.message);
     });
 
     player.on("stateChange", (old, newS) => {
-      console.log(`[Bot B] Player state: ${old.status} ➝ ${newS.status}`);
+      console.log(`[Robin-1] Player state: ${old.status} ➝ ${newS.status}`);
     });
 
     // Create a Discord audio resource from ffmpeg stdout
@@ -94,23 +106,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
 
     player.on(AudioPlayerStatus.Playing, () => {
-      console.log("[Bot B] 🔊 Now playing audio");
+      console.log("[Robin-1] 🔊 Now playing audio");
     });
 
     player.on(AudioPlayerStatus.Idle, () => {
-      console.log("[Bot B] ⚠️ Player is idle");
+      console.log("[Robin-1] ⚠️ Player is idle");
     });
 
     player.on("error", (err) => {
-      console.error("[Bot B] Player error:", err);
+      console.error("[Robin-1] Player error:", err);
     });
 
-    connection.subscribe(player);
+    robinConnection.subscribe(player);
 
     setInterval(() => {
       const now = Date.now();
       if (now - lastPushed > 30) {
-        // console.log(`[Bot B] Pushing silence frame to avoid idle.`);
+        // console.log(`[Robin-1] Pushing silence frame to avoid idle.`);
         incomingAudio.push(SILENCE_FRAME);
         lastPushed = now;
       }
@@ -120,12 +132,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } //sus
 
   if (interaction.commandName === "stop") {
-    const connection = getVoiceConnection(interaction.guild.id);
-    if (connection) {
-      connection.destroy();
-      await interaction.reply("🛑 Bot has left the voice channel.");
+    const robinConnection = getVoicerobinConnection(interaction.guild.id);
+    if (robinConnection) {
+      robinConnection.destroy();
+      await interaction.reply("🛑 Robin-1 has left the voice channel.");
     } else {
-      await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+      await interaction.reply("⚠️ Robin-1 is not currently in a voice channel.");
     }
   }
 });

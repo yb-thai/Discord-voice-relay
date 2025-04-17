@@ -3,10 +3,20 @@ const WebSocket = require("ws");
 const { Client, GatewayIntentBits, Events } = require("discord.js");
 const { joinVoiceChannel, EndBehaviorType, getVoiceConnection } = require("@discordjs/voice");
 const prism = require("prism-media");
+const TOKEN = (process.env.BATMAN_TOKEN);
 
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
+// connect to the relay server 
+ws.on("open", () => {
+  console.log("[Batman] WebSocket connection established");
+});
+ws.on("close", () => {
+  console.log("[Batman] WebSocket connection closed");
+});
+ws.on("error", (err) => {
+  console.error("[Batman] WebSocket error:", err);
+});
 
-const TOKEN = (process.env.BATMAN_TOKEN);
 
 const client = new Client({
   intents: [
@@ -17,22 +27,28 @@ const client = new Client({
   ],
 });
 
+let batmanConnection = null;
+
 client.once("ready", () => {
-  console.log("🎙️ Recorder bot ready. Use /batman to start.");
+  console.log("🎙️ Batman (Recorder bot) ready. Use /batman to start capturing audio.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+  // Start recording
   if (interaction.commandName === "batman") {
     const voiceChannel = interaction.member.voice.channel;
-
     if (!voiceChannel) {
       await interaction.reply("❌ You must be in a voice channel to use this command.");
       return;
-    };
+    }
 
-    const connection = joinVoiceChannel({
+    if (batmanConnection) {
+      await interaction.reply("ℹ️ Batman is already capturing audio.");
+      return;
+    }
+    batmanConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
@@ -40,14 +56,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    await interaction.reply(`🛰️ Joined ${voiceChannel.name} — start capturing audio.`);
+    await interaction.reply(`🛰️ Joined ${voiceChannel.name} — now capturing audio.`);
 
 
 
-    connection.receiver.speaking.on("start", (userId) => {
+    batmanConnection.receiver.speaking.on("start", (userId) => {
       console.log(`User ${userId} started speaking`);
 
-      const opusStream = connection.receiver.subscribe(userId, {
+      const opusStream = batmanConnection.receiver.subscribe(userId, {
         end: {
           behavior: EndBehaviorType.AfterSilence,
           duration: 100,
@@ -59,24 +75,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
         channels: 2,
         frameSize: 960,
       });
-
+      // Pipe the Opus stream through the decoder.
       opusStream.pipe(pcmStream);
 
       opusStream.on("error", console.error);
       pcmStream.on("error", console.error);
 
       pcmStream.on("data", (chunk) => {
-        console.log(`[Bot A] Decoded PCM chunk: ${chunk.length}`);
+        console.log(`[Batman] Decoded PCM chunk: ${chunk.length}`);
       });
 
       // Pipe to the relay streamopusStream.pipe(pcmStream);
       pcmStream.on("data", (chunk) => {
         // Check if WebSocket is still open before pushing data
         if (ws.readyState === WebSocket.OPEN) {
-          console.log(`[Bot A] Captured PCM chunk: ${chunk.length} bytes`); // Log chunk size
+          console.log(`[Batman] Captured PCM chunk: ${chunk.length} bytes`); // Log chunk size
           ws.send(chunk); // Send PCM data to the WebSocket server
         } else {
-          console.error("[Bot A] WebSocket is not open. Not sending data.");
+          console.error("[Batman] WebSocket is not open. Not sending data.");
         }
       });
       opusStream.on("end", () => {
@@ -86,41 +102,43 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // Prevent pushing after EOF
 
       pcmStream.on("end", () => {
-        console.log("[Bot A] PCM stream ended");
+        console.log("[Batman] PCM stream ended");
         isSending = false;
       });
 
       pcmStream.on("error", (err) => {
-        console.error("[Bot A] PCM stream error:", err);
+        console.error("[Batman] PCM stream error:", err);
         isSending = false;
       });
 
       connection.receiver.speaking.on("end", (userId) => {
-        console.log(`[Bot A] User ${userId} stopped speaking`);
+        console.log(`[Batman] User ${userId} stopped speaking`);
         // no need to close the WebSocket
       });
     });
 
     // Handle WebSocket events
     ws.on("open", () => {
-      console.log("[Bot A] WebSocket connection established");
+      console.log("[Batman] WebSocket connection established");
     });
 
     ws.on("close", () => {
-      console.log("[Bot A] WebSocket connection closed");
+      console.log("[Batman] WebSocket connection closed");
     });
 
     ws.on("error", (err) => {
-      console.error("[Bot A] WebSocket error:", err);
+      console.error("[Batman] WebSocket error:", err);
     });
   } // sus
-  if (interaction.commandName === "stopbatman") {
+
+  // Stop recording
+  if (interaction.commandName === "stop-batman") {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
       connection.destroy();
-      await interaction.reply("🛑 Bot has left the voice channel.");
+      await interaction.reply("🛑 Batman has left the voice channel.");
     } else {
-      await interaction.reply("⚠️ Bot is not currently in a voice channel.");
+      await interaction.reply("⚠️ Batman is not currently in a voice channel.");
     }
   }
 });
