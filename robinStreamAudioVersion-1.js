@@ -18,13 +18,7 @@ const TOKEN = (process.env.ROBIN_1_TOKEN);
 
 
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
-ws.on("message", (data) => {
-  console.log(`[Robin] Received ${data.length} bytes`);
-  incomingAudio.write(data);
-});
-ws.on("open", () => { console.log("[Robin] WebSocket connected"); });
-ws.on("close", () => { console.log("[Robin] WebSocket closed"); });
-ws.on("error", (err) => { console.error("[Robin] WebSocket error:", err); });
+
 
 const chunkQueue = [];
 
@@ -39,10 +33,17 @@ const client = new Client({
 
 const SILENCE_FRAME = Buffer.alloc(1920); // 20ms @ 48kHz stereo s16le
 
-// Create a persistent Readable stream that Bot A will push audio into
+// Create a persistent Readable stream that Batman will push audio into
 const incomingAudio = new Readable({
   read() { }, // no-op
 });
+
+ws.on("message", (data) => {
+  console.log(`[Robin] Received ${data.length} bytes`);
+});
+ws.on("open", () => { console.log("[Robin] WebSocket connected"); });
+ws.on("close", () => { console.log("[Robin] WebSocket closed"); });
+ws.on("error", (err) => { console.error("[Robin] WebSocket error:", err); });
 
 ws.on("message", (data) => {
   // Push received raw PCM data into the stream
@@ -63,8 +64,6 @@ client.once("ready", () => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
-
   if (interaction.commandName === "robin-1") {
     const voiceChannel = interaction.member.voice.channel;
 

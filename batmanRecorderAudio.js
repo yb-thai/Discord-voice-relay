@@ -111,7 +111,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         isSending = false;
       });
 
-      connection.receiver.speaking.on("end", (userId) => {
+      batmanConnection.receiver.speaking.on("end", (userId) => {
         console.log(`[Batman] User ${userId} stopped speaking`);
         // no need to close the WebSocket
       });
@@ -133,9 +133,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Stop recording
   if (interaction.commandName === "stop-batman") {
-    const connection = getVoiceConnection(interaction.guild.id);
-    if (connection) {
-      connection.destroy();
+    batmanConnection = getVoiceConnection(interaction.guild.id);
+    if (batmanConnection) {
+      batmanConnection.destroy();
       await interaction.reply("🛑 Batman has left the voice channel.");
     } else {
       await interaction.reply("⚠️ Batman is not currently in a voice channel.");
