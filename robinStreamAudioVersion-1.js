@@ -130,7 +130,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     player.play(resource); // start playback
   } //sus
 
-  if (interaction.commandName === "stop") {
+  if (interaction.commandName === "stop-robin-1") {
     const robinConnection = getVoicerobinConnection(interaction.guild.id);
     if (robinConnection) {
       robinConnection.destroy();

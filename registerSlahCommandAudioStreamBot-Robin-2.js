@@ -3,7 +3,7 @@ require("dotenv").config();
 const TOKEN = (process.env.ROBIN_2_TOKEN);
 const commands = [
   new SlashCommandBuilder().setName("robin-2").setDescription("Audio stream bot: play audio into your current voice channel."),
-  new SlashCommandBuilder().setName("stop").setDescription("Stop stream bot and leave the channel."),
+  new SlashCommandBuilder().setName("stop-robin-2").setDescription("Stop stream bot and leave the channel."),
 
 ].map(cmd => cmd.toJSON());
 
