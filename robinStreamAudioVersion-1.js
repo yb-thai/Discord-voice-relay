@@ -7,7 +7,7 @@ const {
   createAudioResource,
   AudioPlayerStatus,
   StreamType,
-  getVoicerobinConnection,
+  getVoiceConnection,
 } = require("@discordjs/voice");
 const ffmpeg = require("ffmpeg-static");
 const { spawn } = require("child_process");
@@ -131,7 +131,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } //sus
 
   if (interaction.commandName === "stop-robin-1") {
-    const robinConnection = getVoicerobinConnection(interaction.guild.id);
+      robinConnection = getVoiceConnection(interaction.guild.id);
     if (robinConnection) {
       robinConnection.destroy();
       await interaction.reply("🛑 Robin-1 has left the voice channel.");

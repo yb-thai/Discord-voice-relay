@@ -44,6 +44,8 @@ ws.on("message", (data) => {
 });
 
 let lastPushed = Date.now();
+// Global variable for Robin's voice robinConnection
+let robinConnection = null;
 
 console.log("[Robin-3] Connected to audio relay server");
 
@@ -63,7 +65,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
-    const connection = joinVoiceChannel({
+      robinConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
@@ -105,7 +107,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       console.error("[Robin-3] Player error:", err);
     });
 
-    connection.subscribe(player);
+    robinConnection.subscribe(player);
 
     setInterval(() => {
       const now = Date.now();
@@ -120,9 +122,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } //sus
 
   if (interaction.commandName === "stoprobin3") {
-    const connection = getVoiceConnection(interaction.guild.id);
-    if (connection) {
-      connection.destroy();
+        robinConnection = getVoiceConnection(interaction.guild.id);
+    if (robinConnection) {
+      robinConnection.destroy();
       await interaction.reply("🛑 Robin-3 has left the voice channel.");
     } else {
       await interaction.reply("⚠️ Robin-3 is not currently in a voice channel.");
