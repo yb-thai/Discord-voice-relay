@@ -57,7 +57,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    await interaction.reply(`🛰️ Joined ${voiceChannel.name} — now capturing audio.`);
+    await interaction.reply(`🛰️ Joined ${voiceChannel.name} — now start spying on the mission.`);
 
 
 
@@ -137,7 +137,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     batmanConnection = getVoiceConnection(interaction.guild.id);
     if (batmanConnection) {
       batmanConnection.destroy();
-      await interaction.reply("🛑 Batman has left the voice channel.");
+      await interaction.reply("🛑 Batman has left the mission voice channel.");
     } else {
       await interaction.reply("⚠️ Batman is not currently in a voice channel.");
     }

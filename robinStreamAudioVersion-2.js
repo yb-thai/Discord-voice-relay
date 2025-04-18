@@ -59,7 +59,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfDeaf: false,
     });
 
-    await interaction.reply(`🔊 Joined ${voiceChannel.name} — start spying mission.`);
+    await interaction.reply(`🔊 Joined ${voiceChannel.name} — start the spy mission.`);
 
     const player = createAudioPlayer();
     const resource = createAudioResource(incomingAudio, {

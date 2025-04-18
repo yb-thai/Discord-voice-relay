@@ -10,7 +10,7 @@ const commands = [
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 // Replace with your bot's app ID and server ID:
-const CLIENT_ID = (process.env.CLIENT_BATMAN_ID);
+const CLIENT_ID = (process.env.CLIENT_ROBIN_5_ID);
 const GUILD_ID = (process.env.GUILD_ID_DARKNESS);
 
 rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands })
