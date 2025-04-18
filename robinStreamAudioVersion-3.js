@@ -9,17 +9,10 @@ const {
   StreamType,
   getVoiceConnection,
 } = require("@discordjs/voice");
-const ffmpeg = require("ffmpeg-static");
-const { spawn } = require("child_process");
 const { Readable } = require("stream");
-const fs = require("fs");
 
-const TOKEN = "MTM2MTg3ODgyNTI0NzU3MjEyOA.GTIahn._1vKKS6h5LImGtSZw2Vr06svMq6T0HDCX3GE3E";
-
-
-const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
-const chunkQueue = [];
-
+const TOKEN = process.env.ROBIN_3_TOKEN;
+const ws = new WebSocket("ws://localhost:8080");
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -29,25 +22,15 @@ const client = new Client({
   ],
 });
 
-const SILENCE_FRAME = Buffer.alloc(1920); // 20ms @ 48kHz stereo s16le
-
-// Create a persistent Readable stream that Bot A will push audio into
-const incomingAudio = new Readable({
-  read() { }, // no-op
-});
-
-ws.on("message", (data) => {
-  // Push received raw PCM data into the stream
-  console.log(`[Robin-3] Received data: ${data.length} bytes`);
-  incomingAudio.push(data);
-  lastPushed = Date.now();
-});
-
-let lastPushed = Date.now();
-// Global variable for Robin's voice robinConnection
+const SILENCE_FRAME = Buffer.alloc(1920);
 let robinConnection = null;
+let wsHandler = null;
+let incomingAudio = null;
+let lastPushed = Date.now();
 
-console.log("[Robin-3] Connected to audio relay server");
+ws.on("open", () => console.log("[Robin] WebSocket connected"));
+ws.on("close", () => console.log("[Robin] WebSocket closed"));
+ws.on("error", (err) => console.error("[Robin] WebSocket error:", err));
 
 client.once("ready", () => {
   console.log("🔊 Audio stream bot ready. Use /robin-3 to play audio.");
@@ -55,7 +38,6 @@ client.once("ready", () => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
 
   if (interaction.commandName === "robin-3") {
     const voiceChannel = interaction.member.voice.channel;
@@ -65,67 +47,59 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
-      robinConnection = joinVoiceChannel({
+    // Set up fresh stream
+    incomingAudio = new Readable({
+      read() {},
+    });
+
+    robinConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       selfDeaf: false,
     });
 
-    await interaction.reply(`🔊 Joined ${voiceChannel.name} — start playing audio.`);
+    await interaction.reply(`🔊 Joined ${voiceChannel.name} — start spying mission.`);
 
     const player = createAudioPlayer();
+    const resource = createAudioResource(incomingAudio, {
+      inputType: StreamType.Raw,
+    });
+
+    player.play(resource);
+    robinConnection.subscribe(player);
 
     player.on("stateChange", (oldState, newState) => {
-      console.log(
-        `[Robin-3] AudioPlayer transitioned from ${oldState.status} to ${newState.status}`
-      );
+      console.log(`[Robin-3] Player state: ${oldState.status} ➝ ${newState.status}`);
     });
 
     player.on("error", (error) => {
-      console.error(`[Robin-3] AudioPlayer error:`, error.message);
+      console.error(`[Robin-3] Player error:`, error.message);
     });
 
-    player.on("stateChange", (old, newS) => {
-      console.log(`[Robin-3] Player state: ${old.status} ➝ ${newS.status}`);
-    });
+    // ✅ Register a single ws message handler
+    if (wsHandler) ws.off("message", wsHandler); // unregister old handler if exists
+    wsHandler = (data) => {
+      console.log(`[Robin-3] Received ${data.length} bytes`);
+      incomingAudio.push(data);
+      lastPushed = Date.now();
+    };
+    ws.on("message", wsHandler);
 
-    // Create a Discord audio resource from ffmpeg stdout
-    const resource = createAudioResource(incomingAudio, {
-      inputType: StreamType.Raw, // explicitly tell Discord it's raw PCM
-    });
-
-    player.on(AudioPlayerStatus.Playing, () => {
-      console.log("[Robin-3] 🔊 Now playing audio");
-    });
-
-    player.on(AudioPlayerStatus.Idle, () => {
-      console.log("[Robin-3] ⚠️ Player is idle");
-    });
-
-    player.on("error", (err) => {
-      console.error("[Robin-3] Player error:", err);
-    });
-
-    robinConnection.subscribe(player);
-
+    // Silence filler
     setInterval(() => {
-      const now = Date.now();
-      if (now - lastPushed > 30) {
-        // console.log(`[Robin-3] Pushing silence frame to avoid idle.`);
+      if (Date.now() - lastPushed > 30) {
         incomingAudio.push(SILENCE_FRAME);
-        lastPushed = now;
+        lastPushed = Date.now();
       }
     }, 10);
+  }
 
-    player.play(resource); // start playback
-  } //sus
-
-  if (interaction.commandName === "stoprobin3") {
-        robinConnection = getVoiceConnection(interaction.guild.id);
+  if (interaction.commandName === "stop-robin-3") {
+    robinConnection = getVoiceConnection(interaction.guild.id);
     if (robinConnection) {
       robinConnection.destroy();
-      await interaction.reply("🛑 Robin-3 has left the voice channel.");
+      await interaction.reply("🛑 Robin-3 has completed mission and left the voice channel.");
     } else {
       await interaction.reply("⚠️ Robin-3 is not currently in a voice channel.");
     }

@@ -5,6 +5,7 @@ const { joinVoiceChannel, EndBehaviorType, getVoiceConnection } = require("@disc
 const prism = require("prism-media");
 const TOKEN = (process.env.BATMAN_TOKEN);
 
+
 const ws = new WebSocket("ws://localhost:8080"); // Connect to the server
 // connect to the relay server 
 ws.on("open", () => {
