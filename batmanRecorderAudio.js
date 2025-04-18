@@ -142,6 +142,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.reply("⚠️ Batman is not currently in a voice channel.");
     }
   }
+
+    // help guide
+    if (interaction.commandName === "batman-help") {
+      await interaction.reply({
+        ephemeral: true,
+        content: `
+    📖 **Batman/Robin Voice Relay Bot Guide**
+    
+    ! Use this to stream audio between Voice channel !
+    *** Don't test break it - I build this from scratch only fix a few edge cases lmao. 
+  
+    ### 🎙️ For Sending Audio (Batman Bot):
+    \`/batman\` — Joins your channel and starts capturing voice should be the main channel.
+    \`/stop-batman\` — Makes Batman leave the channel.
+    
+    ### 🔊 For Listening (Robin Bots):
+    \`/robin-1\` — Joins your voice channel and plays audio.
+    \`/stop-robin-1\` — Makes Robin-1 leave the channel.
+    
+    (Repeat for \`robin-2\`, etc.)
+  
+    ### ℹ️ Notes:
+
+    - The bots will start in the voice channel that the user currently in when prompted. 
+    - Batman will need to run in the Main voice channel for distribute the communication.
+    - Make sure both bots are running and connected to different voice channel. Otherwise you will hear bad feedback. 
+    - Only audio from Batman is transmitted.
+    - Robin can only listening and relay the communication from Batman since he is a side-kick.
+    - Start Batman first, then the rest of the party can start Robins in each Party voice channel.
+    
+    🛠️ Need help? or maybe feature request ping @whiskey.
+        `,
+      });
+  }
+
 });
 
 client.login(TOKEN);
