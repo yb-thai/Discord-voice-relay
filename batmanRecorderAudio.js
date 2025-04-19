@@ -140,9 +140,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 ### ℹ️ Notes:
 - The bots will start in the voice channel that the user currently in when prompted. 
 - Batman will need to run in the Main voice channel for distribute the communication.
-- Make sure both bots are running and connected to different voice channel. Otherwise you will hear bad feedback. 
+- Make sure both bots are running and connected to different voice channel. Otherwise you will hear ehco. 
 - Only audio from Batman is transmitted.
-- Robin can only listening and relay the communication from Batman since he is a side-kick.
+- Robin can only listening and replay the communication from Batman. Robin currently cannot talk to batman. Maybe I add this in the future. Too much work at hand.
 - Start Batman first, then the rest of the party can start Robins in each Party voice channel.
 - I'm still working on hosting this bot server. For testing at the moment I host the server on my pc. So if we see the bot not responding message - I don't have the server running.
 
