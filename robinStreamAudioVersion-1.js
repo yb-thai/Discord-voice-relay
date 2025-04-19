@@ -39,11 +39,16 @@ client.once("ready", () => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+  // START COMMAND
   if (interaction.commandName === "robin-1") {
     const voiceChannel = interaction.member.voice.channel;
-
     if (!voiceChannel) {
-      await interaction.reply("❌ You must be in a voice channel to use this command.");
+      await interaction.reply({ content: "❌ You must be in a voice channel to use this command.", ephemeral: true });
+      return;
+    }
+
+    if (robinConnection) {
+      await interaction.reply({ content: "ℹ️ robin-1 is already capturing audio.", ephemeral: true });
       return;
     }
 
@@ -59,7 +64,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfDeaf: false,
     });
 
-    await interaction.reply(`🔊 Joined ${voiceChannel.name} — start the spy mission.`);
+    await interaction.reply({ content: `🛰️ Robin-1 joined ${voiceChannel.name} and started spying mission.`, ephemeral: true });
 
     const player = createAudioPlayer();
     const resource = createAudioResource(incomingAudio, {
@@ -95,15 +100,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }, 10);
   }
 
+  // STOP COMMAND
   if (interaction.commandName === "stop-robin-1") {
-    robinConnection = getVoiceConnection(interaction.guild.id);
-    if (robinConnection) {
-      robinConnection.destroy();
-      await interaction.reply("🛑 Robin-1 has completed mission and left the voice channel.");
+    const connection = getVoiceConnection(interaction.guild.id);
+    if (connection) {
+      connection.destroy();
+      batmanConnection = null;
+
+      await interaction.reply({ content: "🛑 Robin-1 has left the mission.", ephemeral: true });
+    //  logChannel.send(`🛑 **Robin-1 has left** the voice channel in ${interaction.guild.name}.`);
     } else {
-      await interaction.reply("⚠️ Robin-1 is not currently in a voice channel.");
+      await interaction.reply({ content: "⚠️ Robin-1 is not currently in a voice channel.", ephemeral: true });
     }
   }
+
+  
 });
 
 client.login(TOKEN);
