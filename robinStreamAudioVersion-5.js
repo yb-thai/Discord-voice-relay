@@ -105,7 +105,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const connection = getVoiceConnection(interaction.guild.id);
       if (connection) {
         connection.destroy();
-        batmanConnection = null;
+        robinConnection = null;
   
         await interaction.reply({ content: "🛑 Robin-5 has left the mission.", ephemeral: true });
         //logChannel.send(`🛑 **Robin-5 has left** the voice channel in ${interaction.guild.name}.`);
