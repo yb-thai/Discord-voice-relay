@@ -118,6 +118,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 
+  // putting guide here for now cuz lazy
   if (interaction.commandName === "batman-help") {
     await interaction.reply({
       ephemeral: true,
@@ -139,11 +140,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 ### ℹ️ Notes:
 - The bots will start in the voice channel that the user currently in when prompted. 
-- Batman will need to run in the Main voice channel for distribute the communication.
+- Batman will need to run in the Main voice channel for distribute the communication (for general streaming purpose).
+- For Main shot caller use Starfire, it will only pick up the user input who starting the bot "/starfire".
 - Make sure both bots are running and connected to different voice channel. Otherwise you will hear ehco. 
-- Only audio from Batman is transmitted.
-- Robin can only listening and replay the communication from Batman. Robin currently cannot talk to batman. Maybe I add this in the future. Too much work at hand.
-- Start Batman first, then the rest of the party can start Robins in each Party voice channel.
+- Only audio from Batman or Starfire is transmittable.
+- Robin can only listening and replay the communication from Batman. Robin currently cannot talk to batman or starfire. Maybe I add this in the future. Too much work at hand.
+- Start Batman/Starfire first, then the rest of the party can start Robins in each Party voice channel.
 - I'm still working on hosting this bot server. For testing at the moment I host the server on my pc. So if we see the bot not responding message - I don't have the server running.
 
 🛠️ Need help? or maybe feature request ping @whiskey.

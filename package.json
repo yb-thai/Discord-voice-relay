@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "start:batman": "node batmanRecorderAudio.js",
+    "start:starfire": "node starfireRecorderAudio.js",
     "start:robin-1": "node robinStreamAudioVersion-1.js",
     "start:robin-2": "node robinStreamAudioVersion-2.js",
     "start:robin-3": "node robinStreamAudioVersion-3.js",
@@ -17,7 +18,7 @@
     "register:robin-3": "node registerSlahCommandAudioStreamBot-Robin-1.js",
     "register:robin-4": "node registerSlahCommandAudioStreamBot-Robin-1.js",
     "register:robin-5": "node registerSlahCommandAudioStreamBot-Robin-1.js",
-    "start:all": "concurrently \"npm:start:batman\" \"npm:start:robin-1\" \"npm:start:robin-2\" \"npm:start:robin-3\" \"npm:start:robin-4\" \"npm:start:robin-5\" ",
+    "start:all": "concurrently \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin-1\" \"npm:start:robin-2\" \"npm:start:robin-3\" \"npm:start:robin-4\" \"npm:start:robin-5\" ",
     "register:all":  "concurrently \"npm:register:batman\" \"npm:register:robin-1\" \"npm:register:robin-2\" \"npm:register:robin-3\" \"npm:register:robin-4\" \"npm:register:robin-5\" "
   },
   "dependencies": {
