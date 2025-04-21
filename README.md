@@ -1,4 +1,4 @@
-# 🦇 Batman & Robin & 🌟 Starfire - Discord Voice Relay Bot System
+#  Batman & Robin &  Starfire - Discord Voice Relay Bot System
 
 This is a multi-bot voice system for Discord built with `discord.js` and `@discordjs/voice`. It includes:
 
@@ -12,9 +12,9 @@ This is a multi-bot voice system for Discord built with `discord.js` and `@disco
 
 | Bot      | Role                           | Description |
 |----------|--------------------------------|-------------|
-| 🦇 Batman   | Audio Capture Bot             | Captures **all users** in a channel and streams PCM audio via WebSocket. |
-| 🐦 Robin   | Audio Playback Bot (1-5)       | Receives audio from WebSocket and plays into a voice channel. Multiple Robins can run in parallel. |
-| 🌟 Starfire | Private Audio Capture Bot     | Captures **only the voice** of the user who triggered the slash command and sends PCM audio via WebSocket. |
+|  Batman   | Audio Capture Bot             | Captures **all users** in a channel and streams PCM audio via WebSocket. |
+|  Robin   | Audio Playback Bot (1-5)       | Receives audio from WebSocket and plays into a voice channel. Multiple Robins can run in parallel. |
+|  Starfire | Private Audio Capture Bot     | Captures **only the voice** of the user who triggered the slash command and sends PCM audio via WebSocket. |
 
 ---
 
