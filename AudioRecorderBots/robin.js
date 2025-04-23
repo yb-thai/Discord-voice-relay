@@ -166,7 +166,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       console.log("[Robin] ⚠️ WebSocket not open, cannot send leave signal.");
     }
   
-    await interaction.reply({ content: "🛑 Robin has left and notified her tower.", ephemeral: true });
+    await interaction.reply({ content: "🛑 Robin has left and notified his tower.", ephemeral: true });
   }
 });
 
