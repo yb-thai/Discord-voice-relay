@@ -4,6 +4,7 @@ const TOKEN = (process.env.ROBIN_TOKEN);
 const commands = [
   new SlashCommandBuilder().setName("robin").setDescription("Receiver bot: capture audio from your current voice channel."),
   new SlashCommandBuilder().setName("stop-robin").setDescription("Stop receiver bot and leave the channel."),
+  new SlashCommandBuilder().setName("titans").setDescription("Help page"),
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
