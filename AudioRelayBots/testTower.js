@@ -7,8 +7,9 @@ const {
   createAudioResource,
   StreamType,
   getVoiceConnection,
+  AudioPlayerStatus,
 } = require("@discordjs/voice");
-const { Readable } = require("stream");
+const { Readable, PassThrough } = require("stream");
 
 const TOKEN = process.env.WALLY_TOWER_TOKEN;
 const WALLY_ID = "wally-tower";
@@ -21,9 +22,10 @@ const client = new Client({
 
 let wallyConnection = null;
 let wsHandler = null;
-let incomingAudio = null;
-let lastPushed = Date.now();
-// push silent to keep bot alive from discord auto disconnect
+let audioStream = null;
+let player = null;
+let silenceTimer;
+
 const SILENCE_FRAME = Buffer.alloc(1920);
 
 ws.on("open", () => console.log(`[${WALLY_ID}] WebSocket connected`));
@@ -35,12 +37,9 @@ client.once("ready", () => {
 });
 
 ws.on("message", async (raw) => {
-  // console.log(`[${WALLY_ID}] 📩 Raw WS Message Received: ${raw.toString()}`);
-  
   try {
     const parsed = JSON.parse(raw.toString());
 
-    // 🚀 JOIN signal
     if (parsed.type === "join-wally-tower") {
       const { guildId, channelId } = parsed;
       console.log(`[${WALLY_ID}] 🚀 Received join-wally-tower for guild ${guildId}, channel ${channelId}`);
@@ -52,9 +51,7 @@ ws.on("message", async (raw) => {
         return;
       }
 
-      console.log(`[${WALLY_ID}] Connecting to ${channel.name} (${channelId})`);
-
-      incomingAudio = new Readable({ read() {} });
+      audioStream = new PassThrough();
 
       wallyConnection = joinVoiceChannel({
         channelId,
@@ -63,28 +60,23 @@ ws.on("message", async (raw) => {
         selfDeaf: false,
       });
 
-      const player = createAudioPlayer();
-      const resource = createAudioResource(incomingAudio, {
+      player = createAudioPlayer();
+      const resource = createAudioResource(audioStream, {
         inputType: StreamType.Raw,
       });
 
       player.play(resource);
       wallyConnection.subscribe(player);
 
-      lastPushed = Date.now();
-
-      // Silence pusher
-      setInterval(() => {
-        if (!incomingAudio || !wallyConnection) return;
-        if (Date.now() - lastPushed > 30) {
-          incomingAudio.push(SILENCE_FRAME);
-          lastPushed = Date.now();
+      // Silence keep-alive
+      clearInterval(silenceTimer);
+      silenceTimer = setInterval(() => {
+        if (audioStream && player.state.status === AudioPlayerStatus.Playing) {
+          audioStream.write(SILENCE_FRAME);
         }
-      }, 10);
-      
+      }, 30);
     }
 
-    // 🛑 LEAVE signal
     else if (parsed.type === "leave-wally-tower") {
       const { guildId } = parsed;
       console.log(`[${WALLY_ID}] 🛑 Received leave-wally-tower for guild ${guildId}`);
@@ -94,28 +86,27 @@ ws.on("message", async (raw) => {
         try {
           connection.destroy();
           wallyConnection = null;
-          incomingAudio = null;
-          console.log(`[${WALLY_ID}] ✅ Successfully disconnected from voice.`);
+          audioStream = null;
+          if (silenceTimer) clearInterval(silenceTimer);
+          console.log(`[${WALLY_ID}] ✅ Disconnected from voice.`);
         } catch (err) {
-          console.error(`[${WALLY_ID}] ❌ Error while destroying connection:`, err);
+          console.error(`[${WALLY_ID}] ❌ Error during disconnect:`, err);
         }
       } else {
-        console.log(`[${WALLY_ID}] ⚠️ No active voice connection to destroy.`);
+        console.log(`[${WALLY_ID}] ⚠️ No voice connection to destroy.`);
       }
     }
 
-    // 🎧 Audio stream
     else if (parsed.from && parsed.audio && parsed.from !== PAIRED_WITH) {
-      if (incomingAudio) {
-        incomingAudio.push(Buffer.from(parsed.audio, "base64"));
-        lastPushed = Date.now();
+      if (audioStream && parsed.audio) {
+        const buffer = Buffer.from(parsed.audio, "base64");
+        audioStream.write(buffer);
       }
     }
 
   } catch (err) {
-    console.error(`[${WALLY_ID}] ❌ WebSocket message error:`, err);
+    console.error(`[${WALLY_ID}] ❌ WS parse error:`, err);
   }
 });
-
 
 client.login(TOKEN);

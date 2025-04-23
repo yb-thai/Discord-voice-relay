@@ -24,13 +24,13 @@
     "start:wallytower": "node AudioRelayBots/wallyTower.js",
     "register:robin": "node RegisterCommand/registerSlahCommandRecordBotRobin.js",
     "register:starfire": "node RegisterCommand/registerSlahCommandRecordBotStarfire.js",
-    "register:raven": "node RegisterCommand/registerSlahCommandRecordRaven.js",
+    "register:raven": "node RegisterCommand/registerSlahCommandRecordBotRaven.js",
     "register:beastboy": "node RegisterCommand/registerSlahCommandRecordBotBeastBoy.js",
     "register:cyborg": "node RegisterCommand/registerSlahCommandRecordBotCyborg.js",
     "register:terra": "node RegisterCommand/registerSlahCommandRecordBotTerra.js",
     "register:wally": "node RegisterCommand/registerSlahCommandRecordBotWally.js",
     "register:jinx": "node RegisterCommand/registerSlahCommandRecordBotJinx.js",
-    "start:all": "concurrently  \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terraTower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
+    "start:all": "concurrently  \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
       "register:all": "concurrently \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
   },
   "dependencies": {

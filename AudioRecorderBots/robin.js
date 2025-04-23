@@ -175,7 +175,8 @@ if (interaction.commandName === "titans") {
       {
         name: "🎛️ Mute/Unmute Controls",
         value:
-          "• Toggle buttons shown when starting \n"
+          "• Toggle buttons shown when starting to mute/unmute \n" +
+          "• Pay attention to indicator. \n"
       },
       {
         name: "🧠 Tips",
@@ -185,7 +186,7 @@ if (interaction.commandName === "titans") {
           "• Great for multi-party coordination in games/ops.",
       }
     )
-    .setFooter({ text: "Titan Voice Relay by @Whiskey - Please don't test break :D", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
+    .setFooter({ text: "question ping @Whiskey - Please don't test break it :D", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
 }

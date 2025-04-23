@@ -10,52 +10,53 @@ const {
 } = require("@discordjs/voice");
 const { Readable } = require("stream");
 
-const TOKEN = process.env.JINX_TOWER_TOKEN;
-const JINX_ID = "jinx-tower";
-const PAIRED_WITH = "jinx";
+const TOKEN = process.env.WALLY_TOWER_TOKEN;
+const WALLY_ID = "wally-tower";
+const PAIRED_WITH = "wally";
 
-const ws = new WebSocket(`ws://localhost:8080/?from=${JINX_ID}`);
+const ws = new WebSocket(`ws://localhost:8080/?from=${WALLY_ID}`);
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-let jinxConnection = null;
+let wallyConnection = null;
 let wsHandler = null;
 let incomingAudio = null;
 let lastPushed = Date.now();
+// push silent to keep bot alive from discord auto disconnect
 const SILENCE_FRAME = Buffer.alloc(1920);
 
-ws.on("open", () => console.log(`[${JINX_ID}] WebSocket connected`));
-ws.on("close", () => console.log(`[${JINX_ID}] WebSocket closed`));
-ws.on("error", (err) => console.error(`[${JINX_ID}] WebSocket error:`, err));
+ws.on("open", () => console.log(`[${WALLY_ID}] WebSocket connected`));
+ws.on("close", () => console.log(`[${WALLY_ID}] WebSocket closed`));
+ws.on("error", (err) => console.error(`[${WALLY_ID}] WebSocket error:`, err));
 
 client.once("ready", () => {
-  console.log(`🔊 ${JINX_ID} ready. Will auto-join when signaled.`);
+  console.log(`🔊 ${WALLY_ID} ready. Will auto-join when signaled.`);
 });
 
 ws.on("message", async (raw) => {
-  // console.log(`[${JINX_ID}] 📩 Raw WS Message Received: ${raw.toString()}`);
+  // console.log(`[${WALLY_ID}] 📩 Raw WS Message Received: ${raw.toString()}`);
   
   try {
     const parsed = JSON.parse(raw.toString());
 
     // 🚀 JOIN signal
-    if (parsed.type === "join-jinx-tower") {
+    if (parsed.type === "join-wally-tower") {
       const { guildId, channelId } = parsed;
-      console.log(`[${JINX_ID}] 🚀 Received join-jinx-tower for guild ${guildId}, channel ${channelId}`);
+      console.log(`[${WALLY_ID}] 🚀 Received join-wally-tower for guild ${guildId}, channel ${channelId}`);
 
       const guild = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(channelId);
       if (!channel) {
-        console.warn(`[${JINX_ID}] ⚠️ Channel not found for ID: ${channelId}`);
+        console.warn(`[${WALLY_ID}] ⚠️ Channel not found for ID: ${channelId}`);
         return;
       }
 
-      console.log(`[${JINX_ID}] Connecting to ${channel.name} (${channelId})`);
+      console.log(`[${WALLY_ID}] Connecting to ${channel.name} (${channelId})`);
 
       incomingAudio = new Readable({ read() {} });
 
-      jinxConnection = joinVoiceChannel({
+      wallyConnection = joinVoiceChannel({
         channelId,
         guildId,
         adapterCreator: guild.voiceAdapterCreator,
@@ -68,38 +69,38 @@ ws.on("message", async (raw) => {
       });
 
       player.play(resource);
-      jinxConnection.subscribe(player);
+      wallyConnection.subscribe(player);
 
       lastPushed = Date.now();
 
       // Silence pusher
       setInterval(() => {
-        if (!incomingAudio || !jinxConnection) return;
-        if (Date.now() - lastPushed > 30) {
+        if (!incomingAudio || !wallyConnection) return;
+        if (Date.now() - lastPushed > 20) {
           incomingAudio.push(SILENCE_FRAME);
           lastPushed = Date.now();
         }
-      }, 10);
+      }, 20);
       
     }
 
     // 🛑 LEAVE signal
-    else if (parsed.type === "leave-jinx-tower") {
+    else if (parsed.type === "leave-wally-tower") {
       const { guildId } = parsed;
-      console.log(`[${JINX_ID}] 🛑 Received leave-jinx-tower for guild ${guildId}`);
+      console.log(`[${WALLY_ID}] 🛑 Received leave-wally-tower for guild ${guildId}`);
 
       const connection = getVoiceConnection(guildId);
       if (connection) {
         try {
           connection.destroy();
-          jinxConnection = null;
+          wallyConnection = null;
           incomingAudio = null;
-          console.log(`[${JINX_ID}] ✅ Successfully disconnected from voice.`);
+          console.log(`[${WALLY_ID}] ✅ Successfully disconnected from voice.`);
         } catch (err) {
-          console.error(`[${JINX_ID}] ❌ Error while destroying connection:`, err);
+          console.error(`[${WALLY_ID}] ❌ Error while destroying connection:`, err);
         }
       } else {
-        console.log(`[${JINX_ID}] ⚠️ No active voice connection to destroy.`);
+        console.log(`[${WALLY_ID}] ⚠️ No active voice connection to destroy.`);
       }
     }
 
@@ -112,7 +113,7 @@ ws.on("message", async (raw) => {
     }
 
   } catch (err) {
-    console.error(`[${JINX_ID}] ❌ WebSocket message error:`, err);
+    console.error(`[${WALLY_ID}] ❌ WebSocket message error:`, err);
   }
 });
 

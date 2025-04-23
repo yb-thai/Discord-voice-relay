@@ -75,11 +75,11 @@ ws.on("message", async (raw) => {
       // Silence pusher
       setInterval(() => {
         if (!incomingAudio || !ravenConnection) return;
-        if (Date.now() - lastPushed > 20) {
+        if (Date.now() - lastPushed > 30) {
           incomingAudio.push(SILENCE_FRAME);
           lastPushed = Date.now();
         }
-      }, 20);
+      }, 10);
       
     }
 
