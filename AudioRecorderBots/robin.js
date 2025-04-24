@@ -156,14 +156,15 @@ if (interaction.commandName === "titans") {
       {
         name: "🎙️ Recorder Bots (Main Talkers)",
         value:
-          "To start, Get in a Voice Channel" + "`/starfire`, `/raven`, `/cyborg`, `/terra`, `/jinx`, `/wally`, `/beastboy`\n" +
+          "To start, Get in a Voice Channel" + "`/robin`, `/starfire`, `/raven`, `/cyborg`, `/terra`, `/jinx`, `/wally`, `/beastboy`\n" +
           "To Stop" + "`/stop-starfire`, `/stop-raven`, and so on..\n" +
           "_Each captures only the voice of the user who triggered it._",
       },
       {
         name: "🗼 Tower Bots (Listeners)",
         value:
-          "Towers will Auto-join paired voice channel on recorder startup:\n" +
+          "Towers will Auto-join paired in voice channel on Main Talkers startup command:\n" +
+          "`robin → robin-tower`\n" +
           "`starfire → starfire-tower`\n" +
           "`raven → raven-tower`\n" +
           "`cyborg → cyborg-tower`\n" +
