@@ -25,7 +25,7 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🦇 cyborg is ready. Use /cyborg to stream your voice.");
+  console.log("🤖 cyborg is ready. Use /cyborg to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛰️ Cyborg is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🤖 Cyborg is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    // 🚀 Signal Cyborg-Tower to join
+    //  Signal Cyborg-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "join-cyborg-tower",
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🛰️ Cyborg has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🤖 Cyborg has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
@@ -153,7 +153,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       cyborgConnection = null;
     }
   
-    // 🚨 Notify Cyborg-Tower to disconnect
+    //  Notify Cyborg-Tower to disconnect
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
         type: "leave-cyborg-tower",

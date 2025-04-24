@@ -25,7 +25,7 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🦇 raven is ready. Use /raven to stream your voice.");
+  console.log("🐦‍⬛ raven is ready. Use /raven to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛰️ Raven is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🐦‍⬛ Raven is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    // 🚀 Signal Raven-Tower to join
+    //  Signal Raven-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "join-raven-tower",
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🛰️ Raven has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🐦‍⬛ Raven has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
@@ -152,8 +152,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       connection.destroy();
       ravenConnection = null;
     }
-  
-    // 🚨 Notify Raven-Tower to disconnect
+
+    // Notify Raven-Tower to disconnect
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
         type: "leave-raven-tower",

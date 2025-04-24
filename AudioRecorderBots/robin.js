@@ -25,13 +25,13 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🦇 robin is ready. Use /robin to stream your voice.");
+  console.log("🦅 robin is ready. Use /robin to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
 
-  // 🎛️ Button interaction
+  //  Button interaction
   if (interaction.isButton()) {
     if (interaction.customId === "mute") isMuted = true;
     if (interaction.customId === "unmute") isMuted = false;
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛰️ Robin is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🦅 Robin is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    // 🚀 Signal Robin-Tower to join
+    // Signal Robin-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "join-robin-tower",
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🛰️ Robin has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🦅 Robin has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
@@ -174,10 +174,10 @@ if (interaction.commandName === "titans") {
           "`beastboy → beastboy-tower`",
       },
       {
-        name: "🎛️ Mute/Unmute Controls",
+        name: "🔊 Mute/Unmute Controls",
         value:
-          "• Toggle buttons shown when starting to mute/unmute \n" +
-          "• Pay attention to indicator. \n"
+          "• Toggle buttons shown when starting for mute/unmute \n" +
+          "• Bot will start muted. Pay attention to indicator. \n"
       },
       {
         name: "🧠 Tips",
@@ -187,7 +187,7 @@ if (interaction.commandName === "titans") {
           "• Great for multi-party coordination in games/ops.",
       }
     )
-    .setFooter({ text: "question ping @Whiskey - Please don't test break it :D", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
+    .setFooter({ text: "questions or feedback ping @Whiskey - Please don't test break it :D", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
 }

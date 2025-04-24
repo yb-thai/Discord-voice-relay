@@ -25,7 +25,7 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🦇 terra is ready. Use /terra to stream your voice.");
+  console.log("🪨 terra is ready. Use /terra to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛰️ Terra is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🪨 Terra is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    // 🚀 Signal Terra-Tower to join
+    //  Signal Terra-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "join-terra-tower",
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🛰️ Terra has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🪨 Terra has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
@@ -153,7 +153,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       terraConnection = null;
     }
   
-    // 🚨 Notify Terra-Tower to disconnect
+    //  Notify Terra-Tower to disconnect
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
         type: "leave-terra-tower",

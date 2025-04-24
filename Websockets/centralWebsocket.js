@@ -20,7 +20,7 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    // 🔄 Broadcast control messages (e.g. join/leave signals)
+    //  Broadcast control messages (e.g. join/leave signals)
     if (parsed.type) {
       console.log(`[Server] Control message from ${from}: ${parsed.type}`);
       for (const [client] of clients.entries()) {
@@ -31,7 +31,7 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    // 🎧 Broadcast audio messages (must include from and audio)
+    //  Broadcast audio messages (must include from and audio)
     if (!parsed.from || !parsed.audio) return;
 
     for (const [client] of clients.entries()) {

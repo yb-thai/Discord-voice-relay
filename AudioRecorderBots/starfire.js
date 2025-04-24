@@ -25,13 +25,13 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🦇 starfire is ready. Use /starfire to stream your voice.");
+  console.log("🌟 starfire is ready. Use /starfire to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
 
-  // 🎛️ Button interaction
+  // Button interaction
   if (interaction.isButton()) {
     if (interaction.customId === "mute") isMuted = true;
     if (interaction.customId === "unmute") isMuted = false;
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛰️ Starfire is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🌟 Starfire is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       selfMute: true,
     });
 
-    // 🚀 Signal Starfire-Tower to join
+    //  Signal Starfire-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "join-starfire-tower",
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🛰️ Starfire has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🌟 Starfire has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
@@ -153,7 +153,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       starfireConnection = null;
     }
   
-    // 🚨 Notify Starfire-Tower to disconnect
+    //  Notify Starfire-Tower to disconnect
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
         type: "leave-starfire-tower",

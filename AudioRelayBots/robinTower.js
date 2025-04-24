@@ -39,7 +39,7 @@ ws.on("message", async (raw) => {
   try {
     const parsed = JSON.parse(raw.toString());
 
-    // 🚀 JOIN signal
+    //  JOIN signal
     if (parsed.type === "join-robin-tower") {
       const { guildId, channelId } = parsed;
       console.log(`[${ROBIN_ID}] 🚀 Received join-robin-tower for guild ${guildId}, channel ${channelId}`);
@@ -83,7 +83,7 @@ ws.on("message", async (raw) => {
       
     }
 
-    // 🛑 LEAVE signal
+    //  LEAVE signal
     else if (parsed.type === "leave-robin-tower") {
       const { guildId } = parsed;
       console.log(`[${ROBIN_ID}] 🛑 Received leave-robin-tower for guild ${guildId}`);
@@ -103,7 +103,7 @@ ws.on("message", async (raw) => {
       }
     }
 
-    // 🎧 Audio stream
+    //  Audio stream
     else if (parsed.from && parsed.audio && parsed.from !== PAIRED_WITH) {
       if (incomingAudio) {
         incomingAudio.push(Buffer.from(parsed.audio, "base64"));
