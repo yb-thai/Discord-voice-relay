@@ -184,6 +184,7 @@ if (interaction.commandName === "titans") {
         value:
           "• Avoid echo by pairing each recorder with a tower in a separate VC.\n" +
           "• Towers only play audio from other recorders (never their own) to avoid echo feedback.\n" +
+          "• Don't use Batman - It is for general purpose streaming everyone voices.\n" +
           "• Great for multi-party coordination in games/ops.",
       }
     )
