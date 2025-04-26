@@ -13,16 +13,13 @@ ws.on("close", () => console.log("[Batman] WebSocket closed"));
 ws.on("error", (err) => console.error("[Batman] WebSocket error:", err));
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent],
 });
 
 let batmanConnection = null;
 let mixer = null;
 let isMuted = false;
+let lastRealChunkTime = Date.now(); // track when last real audio was sent
 
 client.once("ready", () => {
   console.log("🦇 Batman is ready. Use /batman to capture all voices.");
@@ -31,6 +28,7 @@ client.once("ready", () => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
 
+  // 🎛️ Handle Button interaction
   if (interaction.isButton()) {
     if (interaction.customId === "mute") isMuted = true;
     if (interaction.customId === "unmute") isMuted = false;
@@ -53,8 +51,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
+  // 🛰️ Start Command
   if (interaction.commandName === "batman") {
     const voiceChannel = interaction.member.voice.channel;
+
     if (!voiceChannel) {
       await interaction.reply({ content: "❌ Join a voice channel first.", ephemeral: true });
       return;
@@ -81,13 +81,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
 
     mixer.on("data", (chunk) => {
+      lastRealChunkTime = Date.now();
       if (ws.readyState === WebSocket.OPEN && !isMuted) {
-        ws.send(chunk); // 🔥 RAW PCM
+        ws.send(JSON.stringify({ from: "batman", audio: chunk.toString("base64") }));
       }
     });
 
     batmanConnection.receiver.speaking.on("start", (userId) => {
-      console.log(`[Batman] Capturing user: ${userId}`);
+      console.log(`[Batman] Detected user speaking: ${userId}`);
 
       const opusStream = batmanConnection.receiver.subscribe(userId, {
         end: { behavior: EndBehaviorType.AfterSilence, duration: 100 },
@@ -117,6 +118,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       pcmStream.on("error", console.error);
     });
 
+    // 🚀 Signal Batman-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
       console.log(`[Batman] 🚀 Sending join-batman-tower signal`);
       ws.send(JSON.stringify({
@@ -126,17 +128,27 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }));
     }
 
-    const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("mute")
-            .setLabel("🔇 Mute Batman")
-            .setStyle(isMuted ? ButtonStyle.Danger : ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId("unmute")
-            .setLabel("🔊 Unmute Batman")
-            .setStyle(!isMuted ? ButtonStyle.Success : ButtonStyle.Secondary)
-        );
+    // Setup silence injector to prevent Discord audio dropout
+    const silenceBuffer = Buffer.alloc(1920);
+    setInterval(() => {
+      if (!mixer || isMuted) return;
+      if (Date.now() - lastRealChunkTime > 30) {
+        mixer.emit("data", silenceBuffer);
+        lastRealChunkTime = Date.now();
+      }
+    }, 10);
 
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("mute")
+        .setLabel("🔇 Mute Batman")
+        .setStyle(isMuted ? ButtonStyle.Secondary : ButtonStyle.Danger), // danger when unmuted
+      new ButtonBuilder()
+        .setCustomId("unmute")
+        .setLabel("🔊 Unmute Batman")
+        .setStyle(!isMuted ? ButtonStyle.Secondary : ButtonStyle.Success) // success when muted
+    );
+    
     await interaction.reply({
       content: `🛡️ Batman has joined and is capturing **everyone**.\nUse the buttons below to mute/unmute transmitting.`,
       components: [row],
@@ -144,14 +156,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
   }
 
+  // 🛑 Stop Command
   if (interaction.commandName === "stop-batman") {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
       connection.destroy();
       batmanConnection = null;
+      mixer = null;
     }
 
     if (ws.readyState === WebSocket.OPEN) {
+      console.log(`[Batman] 🔴 Sending leave-batman-tower signal`);
       ws.send(JSON.stringify({
         type: "leave-batman-tower",
         guildId: interaction.guild.id,
