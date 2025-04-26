@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node index.js",
-    "start:batman": "node AudioRecorderBots/batmanRecorderAudio.js",
+    "start:batman": "node AudioRecorderBots/batman.js",
     "start:starfire": "node AudioRecorderBots/starfire.js",
     "start:robin": "node AudioRecorderBots/robin.js",
     "start:beastboy": "node AudioRecorderBots/beastboy.js",
@@ -30,8 +30,9 @@
     "register:terra": "node RegisterCommand/registerSlahCommandRecordBotTerra.js",
     "register:wally": "node RegisterCommand/registerSlahCommandRecordBotWally.js",
     "register:jinx": "node RegisterCommand/registerSlahCommandRecordBotJinx.js",
-    "start:all": "concurrently  \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
-      "register:all": "concurrently \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
+    "register:batman": "node RegisterCommand/registerSlahCommandRecordBotBatman.js",
+    "start:all": "concurrently   \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
+      "register:all": "concurrently \"npm:register:batman\" \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
