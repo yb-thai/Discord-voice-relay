@@ -22,7 +22,7 @@ const client = new Client({
 
 let batmanConnection = null;
 let mixer = null;
-let isMuted = false; // Default: Batman is transmitting
+let isMuted = false;
 
 client.once("ready", () => {
   console.log("🦇 Batman is ready. Use /batman to capture all voices.");
@@ -31,7 +31,6 @@ client.once("ready", () => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
 
-  // 🎛️ Handle Button interaction
   if (interaction.isButton()) {
     if (interaction.customId === "mute") isMuted = true;
     if (interaction.customId === "unmute") isMuted = false;
@@ -54,10 +53,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  // 🛰️ Start Command
   if (interaction.commandName === "batman") {
     const voiceChannel = interaction.member.voice.channel;
-
     if (!voiceChannel) {
       await interaction.reply({ content: "❌ Join a voice channel first.", ephemeral: true });
       return;
@@ -85,12 +82,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     mixer.on("data", (chunk) => {
       if (ws.readyState === WebSocket.OPEN && !isMuted) {
-        ws.send(JSON.stringify({ from: "batman", audio: chunk.toString("base64") }));
+        ws.send(chunk); // 🔥 RAW PCM
       }
     });
 
     batmanConnection.receiver.speaking.on("start", (userId) => {
-      console.log(`[Batman] Detected user speaking: ${userId}`);
+      console.log(`[Batman] Capturing user: ${userId}`);
 
       const opusStream = batmanConnection.receiver.subscribe(userId, {
         end: { behavior: EndBehaviorType.AfterSilence, duration: 100 },
@@ -120,7 +117,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       pcmStream.on("error", console.error);
     });
 
-    // 🚀 Signal Batman-Tower to join (optional if you want)
     if (ws.readyState === WebSocket.OPEN) {
       console.log(`[Batman] 🚀 Sending join-batman-tower signal`);
       ws.send(JSON.stringify({
@@ -131,15 +127,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("mute")
-        .setLabel("🔇 Mute Batman")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId("unmute")
-        .setLabel("🔊 Unmute Batman")
-        .setStyle(ButtonStyle.Secondary)
-    );
+          new ButtonBuilder()
+            .setCustomId("mute")
+            .setLabel("🔇 Mute Batman")
+            .setStyle(isMuted ? ButtonStyle.Danger : ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId("unmute")
+            .setLabel("🔊 Unmute Batman")
+            .setStyle(!isMuted ? ButtonStyle.Success : ButtonStyle.Secondary)
+        );
 
     await interaction.reply({
       content: `🛡️ Batman has joined and is capturing **everyone**.\nUse the buttons below to mute/unmute transmitting.`,
@@ -148,7 +144,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
   }
 
-  // 🛑 Stop Command
   if (interaction.commandName === "stop-batman") {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
@@ -156,7 +151,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       batmanConnection = null;
     }
 
-    // 🔴 Optionally notify Tower bot if you want
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "leave-batman-tower",
