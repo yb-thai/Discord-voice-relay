@@ -156,7 +156,7 @@ if (interaction.commandName === "titans") {
       {
         name: "🎙️ Recorder Bots (Main Talkers)",
         value:
-          "To start, Get in a Voice Channel" + "`/robin`, `/starfire`, `/raven`, `/cyborg`, `/terra`, `/jinx`, `/wally`, `/beastboy`\n" +
+          "To start, Get in a Voice Channel" + "`/robin`, `/starfire`, `/raven`, `/cyborg`, `/terra`, `/jinx`, `/wally`, `/beastboy`, `/speedy`, `/bumblebee`\n" +
           "To Stop" + "`/stop-starfire`, `/stop-raven`, and so on..\n" +
           "_Each captures only the voice of the user who triggered it._",
       },
@@ -171,13 +171,16 @@ if (interaction.commandName === "titans") {
           "`terra → terra-tower`\n" +
           "`jinx → jinx-tower`\n" +
           "`wally → wally-tower`\n" +
-          "`beastboy → beastboy-tower`",
+          "`beastboy → beastboy-tower`\n" +
+          "`bumblebee → bumblebee-tower`\n" +
+          "`speedy → speedy-tower`"
       },
       {
         name: "🔊 Mute/Unmute Controls",
         value:
-          "• Toggle buttons shown when starting for mute/unmute \n" +
-          "• Bot will start muted. Pay attention to indicator. \n"
+          "• Bot will start muted. Pay attention to indicator. If not muted please mute the bot if you're not shotcalling. \n" +
+          "• Toggle buttons shown in pop-up message for mute/unmute \n" 
+          
       },
       {
         name: "🧠 Tips",
@@ -188,7 +191,7 @@ if (interaction.commandName === "titans") {
           "• Great for multi-party coordination in games/ops.",
       }
     )
-    .setFooter({ text: "questions or feedback ping @Whiskey - Please don't test break it :D", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
+    .setFooter({ text: "questions or feedback ping @Whiskey", iconURL: "https://cdn-icons-png.flaticon.com/512/8090/8090400.png" });
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
 }
