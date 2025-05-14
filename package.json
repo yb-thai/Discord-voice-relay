@@ -15,6 +15,7 @@
     "start:jinx": "node AudioRecorderBots/jinx.js",
     "start:raven": "node AudioRecorderBots/raven.js",
     "start:beastboytower": "node AudioRelayBots/beastboyTower.js",
+    "start:batmantower": "node AudioRelayBots/batmanTower.js",
     "start:cyborgtower": "node AudioRelayBots/cyborgTower.js",
     "start:jinxtower": "node AudioRelayBots/jinxTower.js",
     "start:raventower": "node AudioRelayBots/ravenTower.js",
@@ -31,8 +32,8 @@
     "register:wally": "node RegisterCommand/registerSlahCommandRecordBotWally.js",
     "register:jinx": "node RegisterCommand/registerSlahCommandRecordBotJinx.js",
     "register:batman": "node RegisterCommand/registerSlahCommandRecordBotBatman.js",
-    "start:all": "concurrently   \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
-      "register:all": "concurrently \"npm:register:batman\" \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
+    "start:all": "concurrently    \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:batmantower\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
+      "register:all": "concurrently  \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
