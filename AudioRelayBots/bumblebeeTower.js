@@ -1,4 +1,4 @@
-BUMBLEBEErequire("dotenv").config();
+require("dotenv").config();
 const WebSocket = require("ws");
 const { Client, GatewayIntentBits } = require("discord.js");
 const {

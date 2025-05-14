@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "start:batman": "node AudioRecorderBots/batman.js",
+    "start:bumblebee": "node AudioRecorderBots/bumblebee.js",
+    "start:speedy": "node AudioRecorderBots/speedy.js",
     "start:starfire": "node AudioRecorderBots/starfire.js",
     "start:robin": "node AudioRecorderBots/robin.js",
     "start:beastboy": "node AudioRecorderBots/beastboy.js",
@@ -15,6 +17,8 @@
     "start:jinx": "node AudioRecorderBots/jinx.js",
     "start:raven": "node AudioRecorderBots/raven.js",
     "start:beastboytower": "node AudioRelayBots/beastboyTower.js",
+    "start:bumblebeetower": "node AudioRelayBots/bumblebeeTower.js",
+    "start:speedytower": "node AudioRelayBots/speedyTower.js",
     "start:batmantower": "node AudioRelayBots/batmanTower.js",
     "start:cyborgtower": "node AudioRelayBots/cyborgTower.js",
     "start:jinxtower": "node AudioRelayBots/jinxTower.js",
@@ -32,7 +36,7 @@
     "register:wally": "node RegisterCommand/registerSlahCommandRecordBotWally.js",
     "register:jinx": "node RegisterCommand/registerSlahCommandRecordBotJinx.js",
     "register:batman": "node RegisterCommand/registerSlahCommandRecordBotBatman.js",
-    "start:all": "concurrently    \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:batmantower\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\" \"npm:start:jinxtower\"",
+    "start:all": "concurrently    \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:bumblebee\" \"npm:start:speedy\" \"npm:start:batmantower\" \"npm:start:bumblebeetower\" \"npm:start:speedytower\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\"  \"npm:start:jinxtower\"",
       "register:all": "concurrently  \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
   },
   "dependencies": {
