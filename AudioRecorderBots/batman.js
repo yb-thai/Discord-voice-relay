@@ -45,7 +45,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🛡️ Batman is now **${isMuted ? "muted" : "unmuted"}**.`,
+      content: `🦇 Batman is now **${isMuted ? "muted" : "unmuted"}**.`,
       components: [row],
     });
     return;
@@ -150,7 +150,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
     
     await interaction.reply({
-      content: `🛡️ Batman has joined and is capturing **everyone**.\nUse the buttons below to mute/unmute transmitting.`,
+      content: `🦇 Batman has joined and is capturing **everyone**.\nUse the buttons below to mute/unmute transmitting.`,
       components: [row],
       ephemeral: true,
     });

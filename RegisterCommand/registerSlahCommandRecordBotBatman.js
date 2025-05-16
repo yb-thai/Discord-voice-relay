@@ -3,7 +3,7 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 
 const TOKEN = process.env.BATMAN_TOKEN;
 const CLIENT_ID = process.env.CLIENT_BATMAN_ID;
-const GUILD_ID = process.env.GUILD_ID_DARKNESS;
+const GUILD_ID = process.env.GUILD_ID_RIZZ;
 
 const commands = [
   new SlashCommandBuilder()

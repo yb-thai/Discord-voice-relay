@@ -25,7 +25,7 @@ let mixer = null;
 let isMuted = true;
 
 client.once("ready", () => {
-  console.log("🤖 speedy is ready. Use /speedy to stream your voice.");
+  console.log("🏹speedy is ready. Use /speedy to stream your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🤖 speedy is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🏹 speedy is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
@@ -139,7 +139,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.reply({
-      content: `🤖 speedy has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
+      content: `🏹 speedy has joined and is listening to **only you**.\nUse the buttons below to mute/unmute.`,
       components: [row],
       ephemeral: true,
     });
