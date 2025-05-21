@@ -1,16 +1,33 @@
 require("dotenv").config();
 const WebSocket = require("ws");
-const { Client, GatewayIntentBits, Events, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { joinVoiceChannel, EndBehaviorType, getVoiceConnection } = require("@discordjs/voice");
+const {
+  Client,
+  GatewayIntentBits,
+  Events,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
+const {
+  joinVoiceChannel,
+  EndBehaviorType,
+  getVoiceConnection,
+} = require("@discordjs/voice");
 const prism = require("prism-media");
 const AudioMixer = require("audio-mixer");
 
 const TOKEN = process.env.BEASTBOY_TOKEN;
-const ws = new WebSocket("ws://localhost:8080/?from=beastboy");
+const BOT_ID = "beastboy";
+const ws = new WebSocket(`ws://localhost:8080/?from=${BOT_ID}`);
 
-ws.on("open", () => console.log("[beastboy] WebSocket connected"));
-ws.on("close", () => console.log("[beastboy] WebSocket closed"));
-ws.on("error", (err) => console.error("[beastboy] WebSocket error:", err));
+// Audio configuration
+let audioQueue = [];
+const MAX_QUEUE_SIZE = 5; // Maximum number of audio chunks to queue before sending
+const CHUNK_SEND_INTERVAL = 20; // Send chunks every 20ms for rate control
+
+ws.on("open", () => console.log(`[${BOT_ID}] WebSocket connected`));
+ws.on("close", () => console.log(`[${BOT_ID}] WebSocket closed`));
+ws.on("error", (err) => console.error(`[${BOT_ID}] WebSocket error:`, err));
 
 const client = new Client({
   intents: [
@@ -20,12 +37,38 @@ const client = new Client({
   ],
 });
 
-let beastboyConnection = null;
+let voiceConnection = null;
 let mixer = null;
 let isMuted = true;
+let audioSendInterval = null;
+
+function startAudioSendInterval() {
+  if (audioSendInterval) clearInterval(audioSendInterval);
+
+  audioSendInterval = setInterval(() => {
+    if (audioQueue.length > 0 && ws.readyState === WebSocket.OPEN) {
+      const chunk = audioQueue.shift();
+      ws.send(
+        JSON.stringify({
+          from: BOT_ID,
+          audio: chunk.toString("base64"),
+          timestamp: Date.now(),
+        })
+      );
+    }
+  }, CHUNK_SEND_INTERVAL);
+}
+
+function stopAudioSendInterval() {
+  if (audioSendInterval) {
+    clearInterval(audioSendInterval);
+    audioSendInterval = null;
+  }
+  audioQueue = [];
+}
 
 client.once("ready", () => {
-  console.log("🐲 beastboy is ready. Use /beastboy to stream your voice.");
+  console.log(`🐲 ${BOT_ID} is ready. Use /${BOT_ID} to stream your voice.`);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -48,7 +91,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     await interaction.update({
-      content: `🐲 BeastBoy is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🐲 BeastBoy is ${
+        isMuted ? "muted" : "unmuted"
+      } — toggle below:`,
       components: [row],
     });
     return;
@@ -60,16 +105,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const userId = interaction.user.id;
 
     if (!voiceChannel) {
-      await interaction.reply({ content: "❌ Join a voice channel first.", ephemeral: true });
+      await interaction.reply({
+        content: "❌ Join a voice channel first.",
+        ephemeral: true,
+      });
       return;
     }
 
-    if (beastboyConnection) {
-      await interaction.reply({ content: "ℹ️ BeastBoy is already listening.", ephemeral: true });
+    if (voiceConnection) {
+      await interaction.reply({
+        content: "ℹ️ BeastBoy is already listening.",
+        ephemeral: true,
+      });
       return;
     }
 
-    beastboyConnection = joinVoiceChannel({
+    voiceConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
@@ -79,30 +130,40 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     //  Signal BeastBoy-Tower to join
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: "join-beastboy-tower",
-        guildId: voiceChannel.guild.id,
-        channelId: voiceChannel.id,
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "join-beastboy-tower",
+          guildId: voiceChannel.guild.id,
+          channelId: voiceChannel.id,
+        })
+      );
     }
 
+    // Create audio mixer with better settings
     mixer = new AudioMixer.Mixer({
       channels: 2,
       bitDepth: 16,
       sampleRate: 48000,
-      clearInterval: 100,
+      clearInterval: 20, // Lower interval for smoother audio
     });
 
+    // Start audio sending interval
+    startAudioSendInterval();
+
+    // Handle mixed audio data
     mixer.on("data", (chunk) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ from: "beastboy", audio: chunk.toString("base64") }));
+      if (isMuted) return;
+
+      // Queue audio for rate-controlled sending
+      if (audioQueue.length < MAX_QUEUE_SIZE) {
+        audioQueue.push(chunk);
       }
     });
 
-    beastboyConnection.receiver.speaking.on("start", (speakingUserId) => {
+    voiceConnection.receiver.speaking.on("start", (speakingUserId) => {
       if (isMuted || speakingUserId !== userId) return;
 
-      const opusStream = beastboyConnection.receiver.subscribe(speakingUserId, {
+      const opusStream = voiceConnection.receiver.subscribe(speakingUserId, {
         end: { behavior: EndBehaviorType.AfterSilence, duration: 100 },
       });
 
@@ -150,23 +211,35 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
       connection.destroy();
-      beastboyConnection = null;
+      voiceConnection = null;
+      mixer = null;
     }
-  
+
+    // Stop sending audio
+    stopAudioSendInterval();
+
     //  Notify BeastBoy-Tower to disconnect
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
         type: "leave-beastboy-tower",
         guildId: interaction.guild.id,
       };
-  
-      console.log("[BeastBoy] 🔴 Sending leave signal to BeastBoy-Tower:", leaveSignal);
+
+      console.log(
+        `[${BOT_ID}] 🔴 Sending leave signal to BeastBoy-Tower:`,
+        leaveSignal
+      );
       ws.send(JSON.stringify(leaveSignal));
     } else {
-      console.log("[BeastBoy] ⚠️ WebSocket not open, cannot send leave signal.");
+      console.log(
+        `[${BOT_ID}] ⚠️ WebSocket not open, cannot send leave signal.`
+      );
     }
-  
-    await interaction.reply({ content: "🛑 BeastBoy has left and notified his tower.", ephemeral: true });
+
+    await interaction.reply({
+      content: "🛑 BeastBoy has left and notified his tower.",
+      ephemeral: true,
+    });
   }
 });
 
