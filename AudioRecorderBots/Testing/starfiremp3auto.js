@@ -7,18 +7,18 @@ const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 const AudioMixer = require("audio-mixer");
 const path = require("path");
 
-const TOKEN = process.env.BEASTBOY_TOKEN;
-const ws = new WebSocket("ws://localhost:8080/?from=beastboy");
+const TOKEN = process.env.STARFIRE_TOKEN;
+const ws = new WebSocket("ws://localhost:8080/?from=starfire");
 
-ws.on("open", () => console.log("[beastboy] WebSocket connected"));
-ws.on("close", () => console.log("[beastboy] WebSocket closed"));
-ws.on("error", (err) => console.error("[beastboy] WebSocket error:", err));
+ws.on("open", () => console.log("[starfire] WebSocket connected"));
+ws.on("close", () => console.log("[starfire] WebSocket closed"));
+ws.on("error", (err) => console.error("[starfire] WebSocket error:", err));
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent],
 });
 
-let beastboyConnection = null;
+let starfireConnection = null;
 let isMuted = true;
 let mixer = null;
 const SILENCE_FRAME = Buffer.alloc(1920);
@@ -48,12 +48,12 @@ setInterval(() => {
 // Stream mixed output to WebSocket
 mixer.on("data", (chunk) => {
   if (ws.readyState === WebSocket.OPEN && !isMuted && !chunk.equals(SILENCE_FRAME)) {
-    ws.send(JSON.stringify({ from: "beastboy", audio: chunk.toString("base64") }));
+    ws.send(JSON.stringify({ from: "starfire", audio: chunk.toString("base64") }));
   }
 });
 
 client.once("ready", () => {
-  console.log("🐲 BeastBoy ready. Use /beastboy to stream an MP3 or your voice.");
+  console.log("🐲 STARFIRE ready. Use /starfire to stream an MP3 or your voice.");
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -63,32 +63,32 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {
     isMuted = interaction.customId === "mute";
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("mute").setLabel("🔇 Mute BeastBoy")
+      new ButtonBuilder().setCustomId("mute").setLabel("🔇 Mute STARFIRE")
         .setStyle(isMuted ? ButtonStyle.Danger : ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("unmute").setLabel("🔊 Unmute BeastBoy")
+      new ButtonBuilder().setCustomId("unmute").setLabel("🔊 Unmute STARFIRE")
         .setStyle(!isMuted ? ButtonStyle.Success : ButtonStyle.Secondary)
     );
     await interaction.update({
-      content: `🐲 BeastBoy is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
+      content: `🐲 STARFIRE is ${isMuted ? "muted" : "unmuted"} — toggle below:`,
       components: [row],
     });
     return;
   }
 
-  // ▶️ /beastboy command
-  if (interaction.commandName === "beastboy") {
+  // ▶️ /starfire command
+  if (interaction.commandName === "starfire") {
     const voiceChannel = interaction.member.voice.channel;
     if (!voiceChannel) {
       await interaction.reply({ content: "❌ Join a voice channel first.", ephemeral: true });
       return;
     }
-    if (beastboyConnection) {
-      await interaction.reply({ content: "ℹ️ BeastBoy is already running.", ephemeral: true });
+    if (starfireConnection) {
+      await interaction.reply({ content: "ℹ️ STARFIRE is already running.", ephemeral: true });
       return;
     }
 
     // Join VC
-    beastboyConnection = joinVoiceChannel({
+    starfireConnection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
@@ -99,14 +99,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // Notify Tower
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
-        type: "join-beastboy-tower",
+        type: "join-starfire-tower",
         guildId: voiceChannel.guild.id,
         channelId: voiceChannel.id,
       }));
     }
 
     // Play test MP3
-     const mp3Path = path.join(__dirname, "music.mp3");
+    const mp3Path = path.join(__dirname, "music.mp3");
     if (!fs.existsSync(mp3Path)) {
       await interaction.reply({ content: "❌ music.mp3 not found in bot folder.", ephemeral: true });
       return;
@@ -122,37 +122,37 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
 
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("mute").setLabel("🔇 Mute BeastBoy")
+      new ButtonBuilder().setCustomId("mute").setLabel("🔇 Mute STARFIRE")
         .setStyle(isMuted ? ButtonStyle.Danger : ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("unmute").setLabel("🔊 Unmute BeastBoy")
+      new ButtonBuilder().setCustomId("unmute").setLabel("🔊 Unmute STARFIRE")
         .setStyle(!isMuted ? ButtonStyle.Success : ButtonStyle.Secondary)
     );
 
     await interaction.reply({
-      content: "🐲 BeastBoy joined and is playing **music.mp3**.\nUse buttons below to mute/unmute.",
+      content: "🐲 STARFIRE joined and is playing **music.mp3**.\nUse buttons below to mute/unmute.",
       components: [row],
       ephemeral: true,
     });
   }
 
-  // ⏹️ /stop-beastboy
-  if (interaction.commandName === "stop-beastboy") {
+  // ⏹️ /stop-starfire
+  if (interaction.commandName === "stop-starfire") {
     const connection = getVoiceConnection(interaction.guild.id);
     if (connection) {
       connection.destroy();
-      beastboyConnection = null;
+      starfireConnection = null;
     }
 
     if (ws.readyState === WebSocket.OPEN) {
       const leaveSignal = {
-        type: "leave-beastboy-tower",
+        type: "leave-starfire-tower",
         guildId: interaction.guild.id,
       };
-      console.log("[BeastBoy] 🔴 Sending leave signal to BeastBoy-Tower:", leaveSignal);
+      console.log("[STARFIRE] 🔴 Sending leave signal to STARFIRE-Tower:", leaveSignal);
       ws.send(JSON.stringify(leaveSignal));
     }
 
-    await interaction.reply({ content: "🛑 BeastBoy has left and notified his tower.", ephemeral: true });
+    await interaction.reply({ content: "🛑 STARFIRE has left and notified his tower.", ephemeral: true });
   }
 });
 

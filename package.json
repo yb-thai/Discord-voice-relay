@@ -37,7 +37,8 @@
     "register:jinx": "node RegisterCommand/registerSlahCommandRecordBotJinx.js",
     "register:batman": "node RegisterCommand/registerSlahCommandRecordBotBatman.js",
     "start:all": "concurrently    \"npm:start:batman\" \"npm:start:starfire\" \"npm:start:robin\" \"npm:start:beastboy\" \"npm:start:cyborg\" \"npm:start:terra\" \"npm:start:wally\" \"npm:start:jinx\" \"npm:start:raven\" \"npm:start:bumblebee\" \"npm:start:speedy\" \"npm:start:batmantower\" \"npm:start:bumblebeetower\" \"npm:start:speedytower\" \"npm:start:robintower\" \"npm:start:starfiretower\" \"npm:start:raventower\" \"npm:start:cyborgtower\" \"npm:start:beastboytower\" \"npm:start:terratower\" \"npm:start:wallytower\"  \"npm:start:jinxtower\"",
-      "register:all": "concurrently  \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\""
+      "register:all": "concurrently  \"npm:register:starfire\" \"npm:register:robin\" \"npm:register:raven\" \"npm:register:beastboy\" \"npm:register:cyborg\" \"npm:register:terra\" \"npm:register:wally\" \"npm:register:jinx\"",
+      "test:all": "concurrently    \"npm:start:batman\" \"npm:start:starfire\" "
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",

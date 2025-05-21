@@ -9,48 +9,49 @@ const {
   getVoiceConnection,
 } = require("@discordjs/voice");
 const { Readable } = require("stream");
+const AudioMixer = require("audio-mixer");
 
 const TOKEN = process.env.STARFIRE_TOWER_TOKEN;
-const STARFIRE_ID = "starfire-tower";
+const TOWER_ID = "starfire-tower";
 const PAIRED_WITH = "starfire";
+const SILENCE_FRAME = Buffer.alloc(1920);
 
-const ws = new WebSocket(`ws://localhost:8080/?from=${STARFIRE_ID}`);
+const ws = new WebSocket("ws://localhost:8080/?from=" + TOWER_ID);
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-let starfireConnection = null;
+let voiceConnection = null;
+let mixer = null;
 let incomingAudio = null;
-const audioBufferQueue = [];
-const SILENCE_FRAME = Buffer.alloc(1920);
-
-ws.on("open", () => console.log(`[${STARFIRE_ID}] WebSocket connected`));
-ws.on("close", () => console.log(`[${STARFIRE_ID}] WebSocket closed`));
-ws.on("error", (err) => console.error(`[${STARFIRE_ID}] WebSocket error:`, err));
+let lastPushed = Date.now();
+const userBuffers = {};
+const mixerInputs = {};
 
 client.once("ready", () => {
-  console.log(`🔊 ${STARFIRE_ID} ready. Will auto-join when signaled.`);
+  console.log(`🔊 ${TOWER_ID} ready.`);
 });
+
+ws.on("open", () => console.log(`[${TOWER_ID}] WebSocket connected`));
+ws.on("close", () => console.log(`[${TOWER_ID}] WebSocket closed`));
+ws.on("error", (err) => console.error(`[${TOWER_ID}] WebSocket error:`, err));
 
 ws.on("message", async (raw) => {
   try {
     const parsed = JSON.parse(raw.toString());
 
-    // JOIN signal
+    // Join voice channel
     if (parsed.type === "join-starfire-tower") {
       const { guildId, channelId } = parsed;
-      console.log(`[${STARFIRE_ID}] 🚀 Joining guild ${guildId}, channel ${channelId}`);
+      console.log(`[${TOWER_ID}] 🚀 Joining ${guildId}:${channelId}`);
 
       const guild = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(channelId);
-      if (!channel) {
-        console.warn(`[${STARFIRE_ID}] ⚠️ Channel not found: ${channelId}`);
-        return;
-      }
+      if (!channel) return console.warn(`[${TOWER_ID}] ⚠️ Channel not found.`);
 
       incomingAudio = new Readable({ read() {} });
 
-      starfireConnection = joinVoiceChannel({
+      voiceConnection = joinVoiceChannel({
         channelId,
         guildId,
         adapterCreator: guild.voiceAdapterCreator,
@@ -63,45 +64,74 @@ ws.on("message", async (raw) => {
       });
 
       player.play(resource);
-      starfireConnection.subscribe(player);
+      voiceConnection.subscribe(player);
 
-      // Smooth stream feeding every 20ms ... maybe? T_T
+      mixer = new AudioMixer.Mixer({
+        channels: 2,
+        bitDepth: 16,
+        sampleRate: 48000,
+        clearInterval: 20,
+      });
+
+      // Push mixed data to stream only if available
+      mixer.on("data", (chunk) => {
+        if (incomingAudio) {
+          incomingAudio.push(chunk);
+          lastPushed = Date.now();
+        }
+      });
+
+      // Feed user mixer inputs on fixed interval
       setInterval(() => {
-        if (!incomingAudio || !starfireConnection) return;
-        const buffer = audioBufferQueue.length > 0 ? audioBufferQueue.shift() : SILENCE_FRAME;
-        incomingAudio.push(buffer);
+        if (!mixer) return;
+
+        Object.entries(mixerInputs).forEach(([fromId, input]) => {
+          const queue = userBuffers[fromId] || [];
+          const next = queue.length > 0 ? queue.shift() : SILENCE_FRAME;
+          input.write(next);
+        });
+
+        if (incomingAudio && Date.now() - lastPushed > 30) {
+          incomingAudio.push(SILENCE_FRAME);
+          lastPushed = Date.now();
+        }
       }, 20);
     }
 
-    // LEAVE signal
+    // Leave voice channel
     else if (parsed.type === "leave-starfire-tower") {
       const { guildId } = parsed;
-      console.log(`[${STARFIRE_ID}] 🛑 Leave signal for guild ${guildId}`);
-
-      const connection = getVoiceConnection(guildId);
-      if (connection) {
-        try {
-          connection.destroy();
-          starfireConnection = null;
-          incomingAudio = null;
-          audioBufferQueue.length = 0;
-          console.log(`[${STARFIRE_ID}] ✅ Disconnected from voice.`);
-        } catch (err) {
-          console.error(`[${STARFIRE_ID}] ❌ Error during disconnect:`, err);
-        }
-      } else {
-        console.log(`[${STARFIRE_ID}] ⚠️ No active voice connection found.`);
+      const conn = getVoiceConnection(guildId);
+      if (conn) {
+        conn.destroy();
+        voiceConnection = null;
+        incomingAudio = null;
+        console.log(`[${TOWER_ID}] 🛑 Disconnected from voice.`);
       }
     }
 
-    // Incoming audio
+    // Audio stream
     else if (parsed.from && parsed.audio && parsed.from !== PAIRED_WITH) {
+      const fromId = parsed.from;
       const buffer = Buffer.from(parsed.audio, "base64");
-      audioBufferQueue.push(buffer);
-    }
 
+      if (!userBuffers[fromId]) userBuffers[fromId] = [];
+      if (!mixerInputs[fromId] && mixer) {
+        const input = new AudioMixer.Input({
+          channels: 2,
+          bitDepth: 16,
+          sampleRate: 48000,
+          volume: 100,
+        });
+        mixer.addInput(input);
+        mixerInputs[fromId] = input;
+        console.log(`[${TOWER_ID}] 🎧 Added mixer input for ${fromId}`);
+      }
+
+      userBuffers[fromId].push(buffer);
+    }
   } catch (err) {
-    console.error(`[${STARFIRE_ID}] ❌ WS message error:`, err);
+    console.error(`[${TOWER_ID}] ❌ WebSocket message error:`, err);
   }
 });
 

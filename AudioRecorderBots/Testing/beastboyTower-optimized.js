@@ -9,53 +9,49 @@ const {
   getVoiceConnection,
 } = require("@discordjs/voice");
 const { Readable } = require("stream");
+const AudioMixer = require("audio-mixer");
 
 const TOKEN = process.env.BEASTBOY_TOWER_TOKEN;
-const BEASTBOY_ID = "beastboy-tower";
+const TOWER_ID = "beastboy-tower";
 const PAIRED_WITH = "beastboy";
+const SILENCE_FRAME = Buffer.alloc(1920);
 
-const ws = new WebSocket(`ws://localhost:8080/?from=${BEASTBOY_ID}`);
+const ws = new WebSocket("ws://localhost:8080/?from=" + TOWER_ID);
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-let beastboyConnection = null;
-let wsHandler = null;
+let voiceConnection = null;
+let mixer = null;
 let incomingAudio = null;
 let lastPushed = Date.now();
-const SILENCE_FRAME = Buffer.alloc(1920);
-
-ws.on("open", () => console.log(`[${BEASTBOY_ID}] WebSocket connected`));
-ws.on("close", () => console.log(`[${BEASTBOY_ID}] WebSocket closed`));
-ws.on("error", (err) => console.error(`[${BEASTBOY_ID}] WebSocket error:`, err));
+const userBuffers = {};
+const mixerInputs = {};
 
 client.once("ready", () => {
-  console.log(`🔊 ${BEASTBOY_ID} ready. Will auto-join when signaled.`);
+  console.log(`🔊 ${TOWER_ID} ready.`);
 });
 
+ws.on("open", () => console.log(`[${TOWER_ID}] WebSocket connected`));
+ws.on("close", () => console.log(`[${TOWER_ID}] WebSocket closed`));
+ws.on("error", (err) => console.error(`[${TOWER_ID}] WebSocket error:`, err));
+
 ws.on("message", async (raw) => {
-  // console.log(`[${BEASTBOY_ID}] 📩 Raw WS Message Received: ${raw.toString()}`);
-  
   try {
     const parsed = JSON.parse(raw.toString());
 
-    //  JOIN signal
+    // Join voice channel
     if (parsed.type === "join-beastboy-tower") {
       const { guildId, channelId } = parsed;
-      console.log(`[${BEASTBOY_ID}] 🚀 Received join-beastboy-tower for guild ${guildId}, channel ${channelId}`);
+      console.log(`[${TOWER_ID}] 🚀 Joining ${guildId}:${channelId}`);
 
       const guild = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(channelId);
-      if (!channel) {
-        console.warn(`[${BEASTBOY_ID}] ⚠️ Channel not found for ID: ${channelId}`);
-        return;
-      }
-
-      console.log(`[${BEASTBOY_ID}] Connecting to ${channel.name} (${channelId})`);
+      if (!channel) return console.warn(`[${TOWER_ID}] ⚠️ Channel not found.`);
 
       incomingAudio = new Readable({ read() {} });
 
-      beastboyConnection = joinVoiceChannel({
+      voiceConnection = joinVoiceChannel({
         channelId,
         guildId,
         adapterCreator: guild.voiceAdapterCreator,
@@ -68,53 +64,75 @@ ws.on("message", async (raw) => {
       });
 
       player.play(resource);
-      beastboyConnection.subscribe(player);
+      voiceConnection.subscribe(player);
 
-      lastPushed = Date.now();
+      mixer = new AudioMixer.Mixer({
+        channels: 2,
+        bitDepth: 16,
+        sampleRate: 48000,
+        clearInterval: 20,
+      });
 
-      // Silence pusher
+      // Push mixed data to stream only if available
+      mixer.on("data", (chunk) => {
+        if (incomingAudio) {
+          incomingAudio.push(chunk);
+          lastPushed = Date.now();
+        }
+      });
+
+      // Feed user mixer inputs on fixed interval
       setInterval(() => {
-        if (!incomingAudio || !beastboyConnection) return;
-        if (Date.now() - lastPushed > 30) {
+        if (!mixer) return;
+
+        Object.entries(mixerInputs).forEach(([fromId, input]) => {
+          const queue = userBuffers[fromId] || [];
+          const next = queue.length > 0 ? queue.shift() : SILENCE_FRAME;
+          input.write(next);
+        });
+
+        if (incomingAudio && Date.now() - lastPushed > 30) {
           incomingAudio.push(SILENCE_FRAME);
           lastPushed = Date.now();
         }
-      }, 10);
-      
+      }, 20);
     }
 
-    //  LEAVE signal
+    // Leave voice channel
     else if (parsed.type === "leave-beastboy-tower") {
       const { guildId } = parsed;
-      console.log(`[${BEASTBOY_ID}] 🛑 Received leave-beastboy-tower for guild ${guildId}`);
-
-      const connection = getVoiceConnection(guildId);
-      if (connection) {
-        try {
-          connection.destroy();
-          beastboyConnection = null;
-          incomingAudio = null;
-          console.log(`[${BEASTBOY_ID}] ✅ Successfully disconnected from voice.`);
-        } catch (err) {
-          console.error(`[${BEASTBOY_ID}] ❌ Error while destroying connection:`, err);
-        }
-      } else {
-        console.log(`[${BEASTBOY_ID}] ⚠️ No active voice connection to destroy.`);
+      const conn = getVoiceConnection(guildId);
+      if (conn) {
+        conn.destroy();
+        voiceConnection = null;
+        incomingAudio = null;
+        console.log(`[${TOWER_ID}] 🛑 Disconnected from voice.`);
       }
     }
 
-    //  Audio stream
+    // Audio stream
     else if (parsed.from && parsed.audio && parsed.from !== PAIRED_WITH) {
-      if (incomingAudio) {
-        incomingAudio.push(Buffer.from(parsed.audio, "base64"));
-        lastPushed = Date.now();
-      }
-    }
+      const fromId = parsed.from;
+      const buffer = Buffer.from(parsed.audio, "base64");
 
+      if (!userBuffers[fromId]) userBuffers[fromId] = [];
+      if (!mixerInputs[fromId] && mixer) {
+        const input = new AudioMixer.Input({
+          channels: 2,
+          bitDepth: 16,
+          sampleRate: 48000,
+          volume: 100,
+        });
+        mixer.addInput(input);
+        mixerInputs[fromId] = input;
+        console.log(`[${TOWER_ID}] 🎧 Added mixer input for ${fromId}`);
+      }
+
+      userBuffers[fromId].push(buffer);
+    }
   } catch (err) {
-    console.error(`[${BEASTBOY_ID}] ❌ WebSocket message error:`, err);
+    console.error(`[${TOWER_ID}] ❌ WebSocket message error:`, err);
   }
 });
-
 
 client.login(TOKEN);
