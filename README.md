@@ -40,15 +40,15 @@ This is a multi-bot voice system for Discord built with `discord.js` and `@disco
 ## Upgrade Version:
 
 
-- **Batman**: Captures audio from everyone in a voice channel and sends it over a WebSocket.
-- Instead of having  **Robin** (1-5): Listens on WebSocket and plays audio into a different voice channel. I have a tower(replay-bot) correspondence with each record-bot when started.
+- **Batman**: Captures audio from everyone in a voice channel and sends it over a WebSocket. - Use for big meeting. 
+- I have a tower(replay-bot) correspondence with each record-bot when started.
 -  **Starfire**: Captures **only the voice** of the user who triggered the `/starfire` command and streams it via WebSocket. when Starfire starts it will also start the starfire-Tower in the same channel. The tower is a replay bot that relays all other bots' communication.
 -  Each bot has a pop-up message that can mute/unmute for 2 ways of communication. 
 
 ## Current Challenge: 
 
-- 2 bots talking at the same time, we have no issue - all other 10 bots can replay the message with no delay and lag. However, if 10 bots are talking at the same time. It floated the WebSocket and voice started to lag.
-- To mitigate this, I added multiple websockets to handle the traffic flow. Currently we are good with 6-7 bots communicate at the same time. 
+- 2 bots talking at the same time, we have no issue - all other 10 bots can replay the message with no delay and lag. However, if 10 recorder bots are talking at the same time. It floated the WebSocket and voice started to lag.
+- To mitigate this, I added multiple websockets to handle the traffic flow for recorder bots. Currently we are good with 6-7 recorder bots sending packets at the same time. 
 
 ## How to run:
 
