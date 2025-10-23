@@ -1,4 +1,22 @@
-#  Batman, Starfire & Robin (Prototype)   - Discord Voice Relay Bot System
+#  Titans  - Discord Voice Relay Bot System
+
+Techincal attribute:
+
+- Voice capture and streaming: the system uses voice connection APIs to subscribe to user audio streams (PCM/Opus frames) via Discord’s voice infrastructure.
+
+- WebSocket audio transport layer: a central WebSocket hub is used to distribute captured audio data in real-time to multiple bots (listeners/relays).
+
+- Multi-bot architecture: there’s a “capture-bot” (e.g., “Batman”) capturing from source channel, and one or more “playback-bots” (e.g., “Robin”) that receive audio and play it into target channels.
+
+- Slash-command triggered capture: there is a bot (e.g., “Starfire”) that triggers capture of only one user's voice and relays it in real-time.
+
+- PCM/Opus audio frames: the raw audio stream is handled at a low level (audio packets) rather than just high-level playback; enabling features like silence-detection, user-specific streams, and custom relay logic.
+
+- Node.js + JavaScript stack: The bots are implemented using Node.js with discord.js (for Discord API) + @discordjs/voice (for low-level voice) + WebSocket libraries for transport.
+
+- EndBehaviour / silence detection: The system uses “end behaviour” logic to terminate subscriptions or streams after user stops speaking or silence threshold is reached.
+
+- Guild/Channel/User IDs, voice channel lifecycle management: Joining/leaving channels, subscribing/unsubscribing, handling speaking events, cleaning up resources.
 
 This is a multi-bot voice system for Discord built with `discord.js` and `@discordjs/voice`. It includes:
 
@@ -15,6 +33,7 @@ This is a multi-bot voice system for Discord built with `discord.js` and `@disco
 |  Batman   | Audio Capture Bot             | Captures **all users** in a channel and streams PCM audio via WebSocket. |
 |  Robin   | Audio Playback Bot (1-5)       | Receives audio from WebSocket and plays into a voice channel. Multiple Robins can run in parallel. |
 |  Starfire | Private Audio Capture Bot     | Captures **only the voice** of the user who triggered the slash command and sends PCM audio via WebSocket. |
++ Additional bots has been added 
 
 ---
 
@@ -28,8 +47,8 @@ This is a multi-bot voice system for Discord built with `discord.js` and `@disco
 
 ## Current Challenge: 
 
-- 2 bots talking at the same time, we have no issue - all other 10 bots can replay the message with no delay and lag. However, if 3 bots are talking at the same time. It floated the WebSocket and voice started to lag.
-- To mitigate this, we can only have 2 main shot-callers. The rest of the bots need to ensure it is muted if they are not the main shot-caller.
+- 2 bots talking at the same time, we have no issue - all other 10 bots can replay the message with no delay and lag. However, if 10 bots are talking at the same time. It floated the WebSocket and voice started to lag.
+- To mitigate this, I added multiple websockets to handle the traffic flow. Currently we are good with 6-7 bots communicate at the same time. 
 
 ## How to run:
 
